@@ -150,7 +150,7 @@
 
     const statusItem = new nw.MenuItem({ label: 'No OnlyKey connected', enabled: false });
     const unlockItem = new nw.MenuItem({
-      label: 'Unlock OnlyKey…',
+      label: 'Unlock OnlyKey\u2026',
       enabled: false,
       click: () => menuBar.openUnlockWindow(),
     });
@@ -160,14 +160,14 @@
     });
 
     const panelItems = [
-      ['slots', 'Slots…'],
-      ['keys', 'Keys…'],
-      ['backup', 'Backup / Restore…'],
-      ['firmware', 'Firmware…'],
-      ['preferences', 'Preferences…'],
-      ['advanced', 'Advanced…'],
-      ['tools', 'Tools…'],
-      ['setup', 'Setup…'],
+      ['slots', 'Slots\u2026'],
+      ['keys', 'Keys\u2026'],
+      ['backup', 'Backup / Restore\u2026'],
+      ['firmware', 'Firmware\u2026'],
+      ['preferences', 'Preferences\u2026'],
+      ['advanced', 'Advanced\u2026'],
+      ['tools', 'Tools\u2026'],
+      ['setup', 'Setup\u2026'],
     ].map(([panel, label]) => ({
       panel,
       item: new nw.MenuItem({
@@ -205,12 +205,12 @@
 
     const describe = (state) => {
       if (!state.connected) return 'No OnlyKey connected';
-      if (!state.deviceType) return 'OnlyKey connecting…';
-      if (state.bootloader) return `${deviceName(state)} – firmware update mode`;
-      if (!state.initialized) return `${deviceName(state)} – needs setup`;
-      if (state.configMode) return `${deviceName(state)} – config mode`;
-      if (state.locked) return `${deviceName(state)} – locked`;
-      return `${deviceName(state)} – unlocked`;
+      if (!state.deviceType) return 'OnlyKey connecting\u2026';
+      if (state.bootloader) return `${deviceName(state)} \u2013 firmware update mode`;
+      if (!state.initialized) return `${deviceName(state)} \u2013 needs setup`;
+      if (state.configMode) return `${deviceName(state)} \u2013 config mode`;
+      if (state.locked) return `${deviceName(state)} \u2013 locked`;
+      return `${deviceName(state)} \u2013 unlocked`;
     };
 
     let lastSignature = '';

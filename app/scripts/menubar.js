@@ -262,7 +262,7 @@
     } else if (state.locked) {
       // Ask for the PIN in the small window, unless the main window is already in
       // front (it shows its own unlock dialog) or the user dismissed it for this
-      // insertion (the menu-bar item "Unlock OnlyKey…" opens it again).
+      // insertion (the menu-bar item "Unlock OnlyKey..." opens it again).
       if (!mainVisible && !state.configMode && !unlockShownForThisConnection && state.deviceType) {
         openUnlockWindow();
       } else {
