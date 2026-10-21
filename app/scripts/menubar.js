@@ -120,6 +120,15 @@
       notify();
     });
 
+    // Safety net: if the menu-bar icon failed to appear, show the window so the
+    // app is never running invisibly.
+    setTimeout(() => {
+      if (!window.okTray) {
+        console.error("menubar.js: no menu-bar icon after 8 s, showing the main window");
+        showMainWindow();
+      }
+    }, 8000);
+
     // Opening the app again from Finder / Launchpad while it is running.
     nw.App.on("reopen", () => showMainWindow());
 

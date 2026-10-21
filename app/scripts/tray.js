@@ -36,11 +36,19 @@
   }
 
   const autoLaunch = new AutoLaunch(autoLaunchOptions);
-  let autoLaunchEnabledInOSAtLaunch;
-  await autoLaunch.isEnabled().then(isEnabled => {
+  // On macOS isEnabled() asks System Events (AppleScript). That can hang or fail,
+  // e.g. while a permission prompt is pending, so never let it block the menu-bar
+  // icon: wait at most 3 seconds, then build the menu and update the checkbox later.
+  let autoLaunchEnabledInOSAtLaunch = !!userPreferences.autoLaunch;
+  const autoLaunchCheck = autoLaunch.isEnabled().then(isEnabled => {
     autoLaunchEnabledInOSAtLaunch = isEnabled;
     userPreferences.autoLaunch = isEnabled;
+    return isEnabled;
+  }).catch((err) => {
+    console.error('tray.js: could not read auto-launch state', err);
+    return autoLaunchEnabledInOSAtLaunch;
   });
+  await Promise.race([autoLaunchCheck, new Promise((resolve) => setTimeout(resolve, 3000))]);
 
   const autoLaunchMenuItem = new nw.MenuItem({
     label: 'Auto-launch app on system login',
@@ -62,6 +70,13 @@
     },
     type: 'checkbox',
     checked: !!autoLaunchEnabledInOSAtLaunch,
+  });
+  // the real answer may arrive after the menu was built
+  autoLaunchCheck.then((isEnabled) => {
+    if (autoLaunchMenuItem.checked !== !!isEnabled) {
+      autoLaunchMenuItem.checked = !!isEnabled;
+      refreshMenuItem(autoLaunchMenuItem, 0);
+    }
   });
 
   const autoUpdateMenuItem = new nw.MenuItem({
