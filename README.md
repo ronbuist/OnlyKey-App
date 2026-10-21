@@ -56,7 +56,6 @@ There are no ready-made downloads of this fork: you build it yourself on your Ma
 takes a few minutes. See **[MACOS.md](MACOS.md)** for the requirements and steps. In short:
 
     $ npm install
-    $ npm run prerelease
     $ npm run release
 
 This creates `releases/KeyBar_<version>_arm64.dmg`. Open it and drag *KeyBar* to
@@ -95,8 +94,10 @@ To build into `build/` only:
 
 To create releases:
 
-    $ npm run prerelease
     $ npm run release
+
+(npm runs the `prerelease` script first by itself: a clean install of the app's own
+dependencies and a production build.)
 
 This will create an installer in the `releases/` subfolder. The installer is created for the
 current OS (and, on macOS, for the Mac's architecture); see [MACOS.md](MACOS.md) for macOS.

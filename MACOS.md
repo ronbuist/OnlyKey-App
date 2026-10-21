@@ -38,11 +38,9 @@ Requirements: macOS 11 or later, Node.js 20 or later, and the Xcode command line
 ```sh
 git clone <your fork> OnlyKey-App
 cd OnlyKey-App
-git checkout macos-menubar-arm64
 npm install          # downloads the NW.js runtime for this Mac's architecture
 npm start            # optional: try it in development mode (shows a Dock icon)
-npm run prerelease
-npm run release
+npm run release      # runs "prerelease" first (clean install + production build)
 ```
 
 `npm run release` produces:
