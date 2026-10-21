@@ -117,19 +117,96 @@ const copyAppToReleases = function () {
     return Q();
 };
 
+// DMG window layout: a compact window with the app on the left and the
+// Applications shortcut on the right (Finder coordinates, icon centres).
+const DMG_WINDOW = { width: 480, height: 260 };
+const DMG_ICON_SIZE = 96;
+const DMG_APP_POSITION = [130, 120];
+const DMG_APPLICATIONS_POSITION = [350, 120];
+
+const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+// Let Finder arrange the mounted (writable) image once; Finder stores the result
+// in the image's hidden .DS_Store. Needs permission for the terminal to control
+// Finder (macOS asks the first time). Returns false if that isn't possible.
+const layoutDmgWindow = function (mountPoint, appName) {
+    const [x, y] = [200, 160]; // where the window opens on screen
+    const script = `
+        tell application "Finder"
+            set dmgFolder to (POSIX file "${mountPoint}" as alias)
+            open dmgFolder
+            set w to container window of dmgFolder
+            set current view of w to icon view
+            set toolbar visible of w to false
+            set statusbar visible of w to false
+            set bounds of w to {${x}, ${y}, ${x + DMG_WINDOW.width}, ${y + DMG_WINDOW.height}}
+            set opts to icon view options of w
+            set arrangement of opts to not arranged
+            set icon size of opts to ${DMG_ICON_SIZE}
+            set text size of opts to 13
+            set position of item "${appName}" of dmgFolder to {${DMG_APP_POSITION.join(', ')}}
+            set position of item "Applications" of dmgFolder to {${DMG_APPLICATIONS_POSITION.join(', ')}}
+            update dmgFolder without registering applications
+            delay 1
+            close w
+        end tell`;
+    try {
+        run('osascript', ['-e', script]);
+        return true;
+    } catch (err) {
+        console.warn('Could not arrange the DMG window with Finder (allow the terminal to ' +
+            'control Finder in System Settings > Privacy & Security > Automation to get the ' +
+            'custom layout). Using the default layout.\n' + (err.stderr || err.message));
+        return false;
+    }
+};
+
+const detach = function (mountPoint) {
+    for (let attempt = 1; attempt <= 5; attempt++) {
+        try {
+            run('hdiutil', attempt < 5 ? ['detach', mountPoint] : ['detach', '-force', mountPoint]);
+            return;
+        } catch (err) {
+            sleepSync(1000); // Finder may still be busy with the volume
+        }
+    }
+};
+
 const packToDmgFile = function () {
     // Built with macOS's own hdiutil: a disk image with the app and a shortcut to
     // /Applications to drag it onto. (The appdmg package used before had known
     // vulnerabilities and native dependencies that don't always build.)
     const dmgName = `${manifest.name}_${manifest.version}_${arch}.dmg`;
+    const appName = `${manifest.productName}.app`;
     const staging = tmpDir.dir('dmg', { empty: true });
-    run('ditto', [finalAppDir.path(), staging.path(`${manifest.productName}.app`)]);
+    run('ditto', [finalAppDir.path(), staging.path(appName)]);
     run('ln', ['-s', '/Applications', staging.path('Applications')]);
 
-    releasesDir.remove(dmgName);
     console.log('Packaging to DMG file...');
+
+    // 1. writable image with some room for Finder's .DS_Store
+    const sizeMb = parseInt(run('du', ['-sm', staging.path()]).split(/\s+/)[0], 10) + 20;
+    const rwDmg = tmpDir.path('rw.dmg');
     run('hdiutil', ['create', '-volname', manifest.productName, '-srcfolder', staging.path(),
-        '-ov', '-format', 'UDZO', releasesDir.path(dmgName)]);
+        '-fs', 'HFS+', '-format', 'UDRW', '-size', `${sizeMb}m`, '-ov', rwDmg]);
+
+    // 2. mount it at a private mount point and let Finder arrange the window
+    const mountPoint = tmpDir.path('dmg-mount');
+    tmpDir.dir('dmg-mount', { empty: true });
+    run('hdiutil', ['attach', rwDmg, '-readwrite', '-noverify', '-noautoopen',
+        '-mountpoint', mountPoint]);
+    try {
+        if (layoutDmgWindow(mountPoint, appName)) console.log('DMG window arranged.');
+        run('sync', []);
+    } finally {
+        detach(mountPoint);
+    }
+
+    // 3. compress into the final read-only image
+    releasesDir.remove(dmgName);
+    run('hdiutil', ['convert', rwDmg, '-format', 'UDZO', '-imagekey', 'zlib-level=9',
+        '-o', releasesDir.path(dmgName)]);
+    tmpDir.remove('rw.dmg');
     console.log('DMG file ready!', releasesDir.path(dmgName));
     return Q();
 };
