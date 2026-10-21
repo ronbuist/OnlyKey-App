@@ -1,113 +1,97 @@
 "use strict";
 
-const gulp = require("gulp");
-const sourcemaps = require("gulp-sourcemaps");
+// Builds the app into ./build. Plain Node.js; this used to be a gulp task, but
+// all it does is copy files and write package.json, and gulp's dependency tree
+// had known vulnerabilities.
+//
+//   node tasks/build.js [--env=development|production|test|chrome] [--watch]
+
+const fs = require("fs");
+const path = require("path");
 const jetpack = require("fs-jetpack");
+const argv = require("yargs").argv;
 
 const { getEnvName, getNodeModulesDir } = require("./utils");
-const isChrome = getEnvName() === "chrome";
 
-const projectDir = jetpack;
-const rootDir = projectDir.cwd("./");
-const destDir = projectDir.cwd("./build");
+const rootDir = jetpack.cwd(path.join(__dirname, ".."));
+const appDir = rootDir.cwd("app");
+const destDir = rootDir.cwd("build");
 
-let manifest = rootDir.read("package.json", "json");
+function build() {
+  const env = getEnvName();
+  const isChrome = env === "chrome";
+  let manifest = rootDir.read(isChrome ? "manifest.json" : "package.json", "json");
 
-const paths = {
-  jsCodeToTranspile: ["app/scripts/**/*.js", "app/*.js"],
-  filesToCopyFromAppDir: [
-    "images/**/*",
-    "stylesheets/**/*",
-    "vendor/**/*",
-    "*.html",
-  ],
-  filesToCopyFromRootDir: [
-    "manifest.json",
-    "!release_node_modules/**/*",
-    "!releases/**/*",
-  ],
-};
+  // clean
+  destDir.dir(".", { empty: true });
 
-if (isChrome) {
-  manifest = rootDir.read("manifest.json", "json");
-  paths.filesToCopyFromRootDir.push("resources/onlykey_logo_*.png");
-  console.log(`Copying resources/onlykey_logo_*.png for Chrome extension...`);
-}
-
-// -------------------------------------
-// Tasks
-// -------------------------------------
-
-gulp.task("clean", function (callback) {
-  return destDir.dirAsync(".", { empty: true }).then((res) => callback());
-});
-
-var copyTask = function () {
-  projectDir.copy("resources/onlykey_logo_128.png", destDir.path("icon.png"), {
+  // app files: scripts, html, images, stylesheets, vendor
+  appDir.copy(".", destDir.path(), {
     overwrite: true,
+    matching: ["scripts/**/*.js", "*.js", "*.html", "images/**/*", "stylesheets/**/*", "vendor/**/*"],
   });
 
-  if (getEnvName() === "production") {
+  rootDir.copy("manifest.json", destDir.path("manifest.json"), { overwrite: true });
+  rootDir.copy("resources/onlykey_logo_128.png", destDir.path("icon.png"), { overwrite: true });
+
+  if (isChrome) {
+    console.log("Copying resources/onlykey_logo_*.png for Chrome extension...");
+    rootDir.find("resources", { matching: "onlykey_logo_*.png" }).forEach((file) =>
+      rootDir.copy(file, destDir.path(file), { overwrite: true })
+    );
+  }
+
+  if (env === "production") {
     console.log(`Copying node_modules from ${getNodeModulesDir()}...`);
-    rootDir.copy(`${getNodeModulesDir()}`, destDir.path("node_modules"), {
+    rootDir.copy(getNodeModulesDir(), destDir.path("node_modules"), {
       matching: ["!nw/**/*"],
       overwrite: true,
     });
   }
 
-  var result = jetpack.copyAsync(projectDir.path("app"), destDir.path(), {
-    overwrite: true,
-    matching: paths.filesToCopyFromAppDir,
-  });
-  result = result.then(() => {
-    return jetpack.copyAsync(projectDir.path(), destDir.path(), {
-      overwrite: true,
-      matching: paths.filesToCopyFromRootDir,
-    });
-  });
-  return result;
-};
-
-gulp.task("copy", copyTask);
-gulp.task("copy-watch", copyTask);
-
-var transpileTask = function () {
-  return gulp
-    .src(paths.jsCodeToTranspile, { base: "app" })
-    .pipe(sourcemaps.init())
-    .pipe(sourcemaps.write("."))
-    .pipe(gulp.dest(destDir.path()));
-};
-gulp.task("transpile", transpileTask);
-gulp.task("transpile-watch", transpileTask);
-
-// Add and customize OS-specific and target-specific stuff.
-gulp.task("finalize", function (done) {
-  switch (getEnvName()) {
+  // package.json adjustments per environment
+  switch (env) {
     case "production":
       // Hide dev toolbar if doing a release.
       manifest.window.toolbar = false;
       break;
     case "test":
-      // Add "-test" suffix to name, so NW.js will write all
-      // data like cookies and locaStorage into separate place.
+      // Separate name, so NW.js keeps cookies/localStorage in a separate place.
       manifest.name += "-test";
-      // TODO: Change manifest.main to launch a test runner?
       break;
     case "development":
-      // Add "-dev" suffix to name, so NW.js will write all
-      // data like cookies and locaStorage into separate place.
       manifest.name += "-dev";
       break;
   }
   destDir.write("package.json", manifest);
-  return done();
-});
 
-gulp.task("watch", function () {
-  gulp.watch(paths.jsCodeToTranspile, transpileTask);
-  gulp.watch(paths.filesToCopyFromRootDir, copyTask);
-  gulp.watch(paths.filesToCopyFromAppDir, { cwd: "app" }, copyTask);
-});
+  console.log(`Build (${env}) ready in ${destDir.path()}`);
+}
 
-gulp.task("build", gulp.series("clean", "transpile", "copy", "finalize"));
+function watch() {
+  // Rebuild when something in app/ or the manifests changes.
+  let timer;
+  const rebuild = (what) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      try {
+        console.log(`Changed: ${what}, rebuilding...`);
+        build();
+      } catch (err) {
+        console.error(err);
+      }
+    }, 200);
+  };
+  fs.watch(appDir.path(), { recursive: true }, (event, file) => rebuild(file));
+  ["package.json", "manifest.json"].forEach((file) =>
+    fs.watch(rootDir.path(file), () => rebuild(file))
+  );
+  console.log("Watching app/ for changes...");
+}
+
+module.exports = { build, watch };
+
+if (require.main === module) {
+  build();
+  if (argv.watch) watch();
+}

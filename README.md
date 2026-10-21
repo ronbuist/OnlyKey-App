@@ -67,7 +67,7 @@ To create releases:
 
 This will create an installer in the `releases/` subfolder. The installer is created for the current OS; this means you will need to run the `release` command on Windows, Linux, and Mac OS to generate all the installers.
 
-On Windows, you need to install [NSIS][nsis] first, and ensure that it's present in your shell's `%PATH%`. That is, add `C:/Program Files (x86)/NSIS` or similar to your `%PATH%` in the operating system settings. On Mac OS, you need to install an optional NPM dependecy: `npm install appdmg`.
+On Windows, you need to install [NSIS][nsis] first, and ensure that it's present in your shell's `%PATH%`. That is, add `C:/Program Files (x86)/NSIS` or similar to your `%PATH%` in the operating system settings. On Mac OS, the DMG is built with the `hdiutil` tool that comes with macOS (see [MACOS.md](MACOS.md)).
 
 To run tests:
 

@@ -118,57 +118,20 @@ const copyAppToReleases = function () {
 };
 
 const packToDmgFile = function () {
-    const deferred = Q.defer();
-
+    // Built with macOS's own hdiutil: a disk image with the app and a shortcut to
+    // /Applications to drag it onto. (The appdmg package used before had known
+    // vulnerabilities and native dependencies that don't always build.)
     const dmgName = `${manifest.name}_${manifest.version}_${arch}.dmg`;
+    const staging = tmpDir.dir('dmg', { empty: true });
+    run('ditto', [finalAppDir.path(), staging.path(`${manifest.productName}.app`)]);
+    run('ln', ['-s', '/Applications', staging.path('Applications')]);
 
-    let appdmg;
-    try {
-        appdmg = require('appdmg');
-    } catch (e) {
-        // appdmg has native dependencies that don't always build (e.g. on newer
-        // Node versions); plain hdiutil always works, just without the background.
-        console.log('appdmg not available, building a plain DMG with hdiutil...');
-        const staging = tmpDir.dir('dmg');
-        run('ditto', [finalAppDir.path(), staging.path(`${manifest.productName}.app`)]);
-        run('ln', ['-s', '/Applications', staging.path('Applications')]);
-        releasesDir.remove(dmgName);
-        run('hdiutil', ['create', '-volname', manifest.productName, '-srcfolder', staging.path(),
-            '-ov', '-format', 'UDZO', releasesDir.path(dmgName)]);
-        console.log('DMG file ready!', releasesDir.path(dmgName));
-        return Q();
-    }
-
-    // Prepare appdmg config
-    let dmgManifest = projectDir.read('resources/osx/appdmg.json');
-    dmgManifest = replace(dmgManifest, {
-        productName: manifest.productName,
-        appPath: finalAppDir.path(),
-        dmgIcon: projectDir.path("resources/osx/dmg-icon.icns"),
-        dmgBackground: projectDir.path("resources/osx/dmg-background.png")
-    });
-    tmpDir.write('appdmg.json', dmgManifest);
-
-    // Delete DMG file with this name if already exists
     releasesDir.remove(dmgName);
-
     console.log('Packaging to DMG file...');
-
-    const readyDmgPath = releasesDir.path(dmgName);
-    appdmg({
-        source: tmpDir.path('appdmg.json'),
-        target: readyDmgPath
-    })
-    .on('error', function (err) {
-        console.error(err);
-        deferred.resolve();
-    })
-    .on('finish', function () {
-        console.log('DMG file ready!', readyDmgPath);
-        deferred.resolve();
-    });
-
-    return deferred.promise;
+    run('hdiutil', ['create', '-volname', manifest.productName, '-srcfolder', staging.path(),
+        '-ov', '-format', 'UDZO', releasesDir.path(dmgName)]);
+    console.log('DMG file ready!', releasesDir.path(dmgName));
+    return Q();
 };
 
 const cleanClutter = function () {

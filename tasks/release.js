@@ -1,6 +1,8 @@
 'use strict';
 
-const gulp = require('gulp');
+// Packages ./build for the current OS (run "npm run prerelease" first).
+//   node tasks/release.js --env=production
+
 const projectDir = require('fs-jetpack');
 const { getNodeModulesDir, os } = require('./utils');
 
@@ -15,12 +17,13 @@ const releaseTasks = {
     windows: require('./release_windows'),
 };
 
-gulp.task('release', gulp.series(function releaseForOs() {
-    return releaseTasks[os()]({
-        manifest,
-        node_modules_dir,
-        projectDir,
-        releasesDir,
-        tmpDir
-    });
-}));
+Promise.resolve(releaseTasks[os()]({
+    manifest,
+    node_modules_dir,
+    projectDir,
+    releasesDir,
+    tmpDir
+})).catch((err) => {
+    console.error(err && err.message ? err.message : err);
+    process.exit(1);
+});

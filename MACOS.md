@@ -32,7 +32,7 @@ Windows and Linux behave as before (window at startup, tray menu with settings o
 ## Building on your Mac
 
 Requirements: macOS 11 or later, Node.js 20 or later, and the Xcode command line tools
-(`xcode-select --install`; needed for `codesign`, `lipo` and the DMG builder).
+(`xcode-select --install`; needed for `codesign` and `lipo`).
 
 ```sh
 git clone <your fork> OnlyKey-App
@@ -47,7 +47,8 @@ npm run release
 `npm run release` produces:
 
 - `releases/OnlyKey Menu Bar.app` – drag it to `/Applications`
-- `releases/OnlyKey-MenuBar_0.1.0_arm64.dmg` – if the optional `appdmg` package installed
+- `releases/OnlyKey-MenuBar_0.1.0_arm64.dmg` – a disk image with the app and a shortcut to
+  Applications, built with macOS's own `hdiutil`
 
 The release step checks that the executable really is `arm64` and stops if it isn't.
 
@@ -78,6 +79,16 @@ this branch does not set up.)
 - Settings are separate from the official app, so preferences you set there don't carry
   over. If the official app is set to start at login, turn that off (in the official
   app, or in System Settings → General → Login Items) so only one copy runs.
+
+## Dependencies and security
+
+To keep known vulnerabilities out (`npm audit`), this branch:
+
+- replaces the abandoned `request` package with a small helper on Node's built-in
+  `https` module (`app/scripts/httpsGet.js`), used for the firmware update check;
+- builds with plain Node.js scripts (`tasks/build.js`, `tasks/release.js`) instead of
+  gulp, and the DMG with `hdiutil` instead of `appdmg`;
+- drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`).
 
 ## If the key isn't detected
 

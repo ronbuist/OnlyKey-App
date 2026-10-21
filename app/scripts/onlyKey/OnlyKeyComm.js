@@ -3,7 +3,7 @@ let userPreferences, request;
 
 if (desktopApp) {
   userPreferences = require("./scripts/userPreferences.js");
-  request = require("request");
+  request = require("./scripts/httpsGet.js"); // replaces the deprecated `request` package
 }
 
 let backupsigFlag = -1;

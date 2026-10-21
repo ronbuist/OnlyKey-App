@@ -1,67 +1,15 @@
 'use strict';
 
-var Q = require('q');
-var nwjs = require('./nwjs');
-var pathUtil = require('path');
-var childProcess = require('child_process');
-var kill = require('tree-kill');
-var utils = require('./utils');
-var watch;
+// Development mode: build, rebuild on changes, and run the app with NW.js.
+//   npm start
 
-var gulpPath = pathUtil.resolve('./node_modules/.bin/gulp');
-if (process.platform === 'win32') {
-    gulpPath += '.cmd';
-}
+const childProcess = require('child_process');
+const nwjs = require('./nwjs');
+const { build, watch } = require('./build');
 
-var runBuild = function () {
-    var deferred = Q.defer();
+build();
+watch();
 
-    var build = childProcess.spawn(gulpPath, [
-        'build',
-        '--env=' + utils.getEnvName(),
-        '--color'
-    ], {
-        stdio: 'inherit'
-    });
-
-    build.on('close', function (code) {
-        deferred.resolve();
-    });
-
-    return deferred.promise;
-};
-
-var runGulpWatch = function () {
-    watch = childProcess.spawn(gulpPath, [
-        'watch',
-        '--env=' + utils.getEnvName(),
-        '--color'
-    ], {
-        stdio: 'inherit'
-    });
-
-    watch.on('close', function (code) {
-        // Gulp watch exits when error occured during build.
-        // Just respawn it then.
-        runGulpWatch();
-    });
-};
-
-var runApp = function () {
-    var app = childProcess.spawn(nwjs.executable(), ['./build'], {
-        stdio: 'inherit'
-    });
-
-    app.on('close', function (code) {
-        // User closed the app. Kill the host process.
-        kill(watch.pid, 'SIGKILL', function () {
-            process.exit();
-        });
-    });
-};
-
-runBuild()
-.then(function () {
-    runGulpWatch();
-    runApp();
-});
+const app = childProcess.spawn(nwjs.executable(), ['./build'], { stdio: 'inherit' });
+// User closed the app: stop watching and exit.
+app.on('close', () => process.exit());
