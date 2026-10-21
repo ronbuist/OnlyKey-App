@@ -694,7 +694,7 @@ if (chrome.passwordsPrivate) {
 
 
   Wizard.prototype.initKeySelect = async function (rawKey, cb) {
-    console.info(rawKey);
+    console.info("initKeySelect: key type", rawKey && rawKey.type); // never log the key itself
 
     //Check if PGP or SSH
     if (rawKey.type == 'ed25519') {
@@ -717,7 +717,7 @@ if (chrome.passwordsPrivate) {
         p: rawKey.part.p.data.slice(1, rawKey.part.p.data.length),
         q: rawKey.part.q.data.slice(1, rawKey.part.q.data.length)
       }];
-      console.info(keys);
+      console.info(`initKeySelect: ${keys.length} RSA key(s) found`);
       this.onlyKey.tempRsaKeys = keys;
     } else if (rawKey.primaryKey.params[0].oid) { //ECC
       var curve;
@@ -748,8 +748,7 @@ if (chrome.passwordsPrivate) {
             s: rawKey.subKeys[i].keyPacket.params[3].data
           });
         });
-        console.info(keys);
-        console.info(curve);
+        console.info(`initKeySelect: ${keys.length} ECC key(s) found`);
   
         this.onlyKey.tempRsaKeys = keys;
       } catch (e) {
@@ -1007,8 +1006,8 @@ if (chrome.passwordsPrivate) {
                 error = true;
               }
             }
-            console.info(formValue);
-            console.info((fieldMap[field].input).name)
+            // never log formValue: it can be a password, OTP secret or key
+            console.info("Slot field:", (fieldMap[field].input).name)
             if (!error) form[field].checked = false;
           }
           break;
@@ -1025,10 +1024,8 @@ if (chrome.passwordsPrivate) {
               // validate Google OTP fields
               case 'txt2FAUserName':
                 if (this.currentSlot.mode === 'googleAuthOtp') {
-                  console.info("BASE32 value:", formValue);
                   formValue = base32tohex(formValue.replace(/\s/g, ''));
                   formValue = formValue.match(/.{2}/g);
-                  console.info("was converted to HEX:", formValue);
                   delete this.currentSlot.mode;
                 } else {
                   isChecked = false;
@@ -1042,9 +1039,6 @@ if (chrome.passwordsPrivate) {
                   const secretField = form['yubiSlotSecretKey'];
                   const privateId = ('' + privateIdField.value).trim();
                   const secret = ('' + secretField.value).trim();
-                  console.info("publicId", formValue);
-                  console.info("privateId", privateId);
-                  console.info("secret", secret);
                   pubId = formValue.toString().replace(/\s/g, "");
                   privId = privateId.toString().replace(/\s/g, "");
                   secKey = secret.toString().replace(/\s/g, "");
@@ -1057,7 +1051,6 @@ if (chrome.passwordsPrivate) {
                   secKey = secKey.slice(0, maxSecretKeyLength);
 
                   formValue = (pubId + privId + secKey).match(/.{2}/g);
-                  console.info("formValue", formValue);
                   privateIdField.value = '';
                   secretField.value = '';
                   delete this.currentSlot.mode;

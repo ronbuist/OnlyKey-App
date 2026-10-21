@@ -56,6 +56,7 @@ function build() {
   }
 
   // package.json adjustments per environment
+  manifest.buildEnv = env; // read by scripts/console-guard.js
   switch (env) {
     case "production":
       // Hide dev toolbar if doing a release.

@@ -353,9 +353,12 @@ OnlyKey.prototype.sendMessage = function (options, callback) {
     bytes[cursor++] = pad;
   }
 
+  // Never log the message bytes: they can contain the PIN, slot passwords,
+  // OTP secrets or private keys.
   console.info(
-    "SENDING " + msgId + " to connectionId " + this.connection + ":",
-    bytes
+    "SENDING " + msgId + " to connectionId " + this.connection +
+      (slotId !== null ? ", slot " + slotId : "") +
+      (fieldId !== null ? ", field " + fieldId : "")
   );
 
   myOnlyKey.setLastMessage("sent", msgId);
@@ -2027,7 +2030,6 @@ function verifyBackupFile(e) {
         var hash = sha256.create();
         if (!line.includes("--")) {
           var valuetohash = hexStringtoByteArray(base64tohex(line));
-          console.info("line to hash", valuetohash);
           hash.update(backuphash);
           hash.update(valuetohash);
           backuphash = hash.array();
