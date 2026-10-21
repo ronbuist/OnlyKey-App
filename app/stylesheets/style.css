@@ -388,6 +388,39 @@ nav > a.active {
   filter: invert(1);  
 }
 
+/* KeyBar header (replaces the OnlyKey logo in this fork) */
+@font-face {
+  font-family: "KeyBarFont";
+  src: url("Lato-Bold.ttf") format("truetype");
+}
+
+.kb-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 12px;
+}
+
+.kb-icon {
+  width: 72px;
+  height: 72px;
+  flex: none;
+}
+
+.kb-name {
+  font-family: KeyBarFont, BodyFont, sans-serif;
+  font-size: 40px;
+  line-height: 1.05;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.kb-tagline {
+  font-size: 15px;
+  color: #d0d0d0;
+  margin-top: 2px;
+}
+
 .form-error {
   color: #ED4245;
   margin-top: 1em;

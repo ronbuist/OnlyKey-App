@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>OnlyKey App</title>
+    <title>KeyBar</title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
 
     <!-- Scripts giving you few extra things in NW.js -->
@@ -31,7 +31,13 @@
     </div>
 
     <div id="main" class="hide">
-      <img src="/images/OnlyKey_Logo.png" width="340" />
+      <header class="kb-header">
+        <img src="/images/keybar-icon.png" alt="" class="kb-icon" />
+        <div>
+          <div class="kb-name">KeyBar</div>
+          <div class="kb-tagline">for OnlyKey devices</div>
+        </div>
+      </header>
 
       <nav>
         <a id="show-init-panel" href="">Setup</a>
@@ -1065,7 +1071,7 @@
                 Load Firmware <a
                 href="https://docs.crp.to/upgradeguide.html#download-firmware"
                 class="external tooltip fade"
-                data-tooltip="OnlyKey supports auto firmware update through the OnlyKey App. This requires that 'Automatically check for firmware updates' is checked in your OnlyKey App settings. Firmware can also be manually downloaded by clicking here to open the firmware upgrade guide."
+                data-tooltip="OnlyKey supports auto firmware update through KeyBar. This requires that 'Automatically check for firmware updates' is checked in KeyBar's App Settings (menu-bar icon). Firmware can also be manually downloaded by clicking here to open the firmware upgrade guide."
                 ><img class="moveimage" src="/images/solid/link.svg" width="19px"
               /></a>
               </h2>
@@ -1868,7 +1874,7 @@
         Enter/re-enter password and click [Set Slot]
       </div>
       <span class="device-specific ok-duo">OnlyKey DUO only supports static-password OR Multi-Factor (MFA) 
-        when a device PIN has not been set. A device PIN can be set from the OnlyKey App Setup tab and 
+        when a device PIN has not been set. A device PIN can be set from the KeyBar Setup tab and 
         provides extra physical security. Once a device PIN has been enabled additional login information
         such as username and URL may be added to slots.</span>
       <div>

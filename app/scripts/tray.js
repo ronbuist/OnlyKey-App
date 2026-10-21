@@ -37,6 +37,19 @@
       // permission prompt and can hang. The agent starts the executable directly.
       autoLaunchOptions.path = `${appPath}/Contents/MacOS/${productName}`;
       autoLaunchOptions.mac = { useLaunchAgent: true };
+
+      // Version 0.1.x of this fork was called "OnlyKey Menu Bar". Remove its launch
+      // agent, so the old version doesn't also start at login.
+      try {
+        const fs = require('fs');
+        const oldAgent = require('path').join(os.homedir(), 'Library/LaunchAgents/OnlyKey Menu Bar.plist');
+        if (productName !== 'OnlyKey Menu Bar' && fs.existsSync(oldAgent)) {
+          fs.unlinkSync(oldAgent);
+          console.info(`tray.js: removed old launch agent ${oldAgent}`);
+        }
+      } catch (e) {
+        console.warn('tray.js: could not remove the old launch agent', e);
+      }
   }
 
   const autoLaunch = new AutoLaunch(autoLaunchOptions);
@@ -108,7 +121,7 @@
   });
 
   const tray = new nw.Tray({
-    icon: './images/ok-tray-logo.png',
+    icon: osx ? './images/keybar-tray.png' : './images/ok-tray-logo.png',
   });
   // keep a global reference, otherwise the icon can disappear when garbage-collected
   window.okTray = tray;
@@ -143,7 +156,7 @@
       click: () => menuBar.openUnlockWindow(),
     });
     const openItem = new nw.MenuItem({
-      label: 'Open OnlyKey App',
+      label: `Open ${productName}`,
       click: () => menuBar.showMainWindow(),
     });
 
@@ -185,6 +198,10 @@
     panelItems.forEach(({ item }) => mainMenu.append(item));
     mainMenu.append(new nw.MenuItem({ type: 'separator' }));
     mainMenu.append(settingsItem);
+    mainMenu.append(new nw.MenuItem({
+      label: `About ${productName}`,
+      click: () => menuBar.openAboutWindow(),
+    }));
     mainMenu.append(new nw.MenuItem({ type: 'separator' }));
     mainMenu.append(quitItem);
 

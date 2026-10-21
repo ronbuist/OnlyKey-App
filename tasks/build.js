@@ -32,7 +32,8 @@ function build() {
   });
 
   rootDir.copy("manifest.json", destDir.path("manifest.json"), { overwrite: true });
-  rootDir.copy("resources/onlykey_logo_128.png", destDir.path("icon.png"), { overwrite: true });
+  rootDir.copy("resources/keybar/keybar_128.png", destDir.path("icon.png"), { overwrite: true });
+  rootDir.copy("LICENSE.txt", destDir.path("LICENSE.txt"), { overwrite: true });
 
   if (isChrome) {
     console.log("Copying resources/onlykey_logo_*.png for Chrome extension...");

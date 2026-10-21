@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>About KeyBar</title>
+    <style>
+      @font-face {
+        font-family: "Lato";
+        src: url("/stylesheets/Lato-Regular.ttf");
+      }
+      @font-face {
+        font-family: "Lato";
+        font-weight: bold;
+        src: url("/stylesheets/Lato-Bold.ttf");
+      }
+      :root {
+        --bg: #f4f4f5;
+        --fg: #1f2328;
+        --muted: #5f6672;
+        --panel: #ffffff;
+        --border: #c9cdd3;
+        --accent: #2f6fde;
+        --accent-fg: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #232428;
+          --fg: #eceef1;
+          --muted: #a3aab4;
+          --panel: #2c2e33;
+          --border: #4a4e55;
+          --accent: #4c86f0;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 13px;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 22px 26px 18px;
+        gap: 12px;
+      }
+      header { display: flex; align-items: center; gap: 14px; }
+      header img { width: 72px; height: 72px; flex: none; }
+      h1 { margin: 0; font-size: 24px; font-weight: bold; }
+      .version { color: var(--muted); margin-top: 2px; }
+      p { margin: 0; line-height: 1.45; }
+      .notice {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .small { color: var(--muted); font-size: 12px; }
+      a { color: var(--accent); text-decoration: none; cursor: pointer; }
+      pre {
+        flex: 1;
+        margin: 0;
+        overflow: auto;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: 12px/1.5 "Lato", -apple-system, sans-serif;
+        white-space: pre-wrap;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; }
+      button {
+        font: inherit;
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--fg);
+        cursor: pointer;
+      }
+      button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+      .hide { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="/images/keybar-icon.png" alt="" />
+        <div>
+          <h1>KeyBar</h1>
+          <div class="version">for OnlyKey devices</div>
+          <div class="version" id="version"></div>
+        </div>
+      </header>
+
+      <section id="info">
+        <p class="notice">
+          KeyBar is an <b>unofficial</b> fork of the OnlyKey App by CryptoTrust. It is not made,
+          endorsed or supported by CryptoTrust or the OnlyKey Project. OnlyKey is a trademark
+          of its owner.
+        </p>
+        <p style="margin-top: 12px">
+          This product includes software developed by the OnlyKey Project
+          (<a data-href="http://www.crp.to/ok">http://www.crp.to/ok</a>).
+        </p>
+        <p class="small" style="margin-top: 12px">
+          Source code: <a data-href="https://github.com/ronbuist/OnlyKey-App">github.com/ronbuist/OnlyKey-App</a><br />
+          Official OnlyKey App: <a data-href="https://github.com/trustcrypto/OnlyKey-App">github.com/trustcrypto/OnlyKey-App</a>
+        </p>
+      </section>
+
+      <pre id="license" class="hide">Loading license…</pre>
+
+      <footer>
+        <button type="button" id="licenseBtn">Show License</button>
+        <button type="button" class="primary" id="closeBtn">Close</button>
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        let api = null;
+        const $ = (id) => document.getElementById(id);
+
+        function openExternal(url) {
+          if (api && api.openExternal) api.openExternal(url);
+          else if (typeof nw !== "undefined") nw.Shell.openExternal(url);
+          else window.open(url);
+        }
+
+        document.querySelectorAll("a[data-href]").forEach((a) =>
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            openExternal(a.dataset.href);
+          })
+        );
+
+        // The license file has hard line breaks every ~72 characters. Join the lines of
+        // each paragraph (a numbered item starts a new one) so it wraps nicely.
+        function reflow(text) {
+          const out = [];
+          text.trim().split(/\r?\n/).forEach((raw) => {
+            const line = raw.trim();
+            const last = out.length ? out[out.length - 1] : "";
+            if (!line) out.push("");
+            else if (!last || /^\d+\.\s/.test(line)) out.push(line);
+            else out[out.length - 1] = `${last} ${line}`;
+          });
+          return out.join("\n").replace(/\n{3,}/g, "\n\n");
+        }
+
+        let licenseLoaded = false;
+        async function loadLicense() {
+          if (licenseLoaded) return;
+          try {
+            const res = await fetch("/LICENSE.txt");
+            if (!res.ok) throw new Error(res.status);
+            $("license").textContent = reflow(await res.text());
+            licenseLoaded = true;
+          } catch (e) {
+            $("license").textContent =
+              "The license file could not be loaded. It is also included as LICENSE.txt " +
+              "in the KeyBar disk image and source code.";
+          }
+        }
+
+        $("licenseBtn").addEventListener("click", () => {
+          const showing = !$("license").classList.contains("hide");
+          $("license").classList.toggle("hide", showing);
+          $("info").classList.toggle("hide", !showing);
+          $("licenseBtn").textContent = showing ? "Show License" : "Back";
+          if (!showing) loadLicense();
+        });
+
+        $("closeBtn").addEventListener("click", () => (api ? api.close() : window.close()));
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") $("closeBtn").click();
+        });
+
+        // Called by menubar.js once this window has loaded.
+        window.initAbout = function (bridge) {
+          api = bridge;
+          if (bridge.version) $("version").textContent = `Version ${bridge.version}`;
+        };
+      })();
+    </script>
+  </body>
+</html>

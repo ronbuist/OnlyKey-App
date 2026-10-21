@@ -220,6 +220,56 @@
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // About window
+  // ---------------------------------------------------------------------------
+
+  let aboutWin = null;
+  let aboutWinOpening = false;
+
+  function openAboutWindow() {
+    if (aboutWin) {
+      aboutWin.show();
+      aboutWin.focus();
+      return;
+    }
+    if (aboutWinOpening) return;
+    aboutWinOpening = true;
+
+    const manifest = nw.App.manifest || {};
+    nw.Window.open(
+      "about.html",
+      {
+        id: "keybar-about",
+        title: `About ${manifest.productName || "KeyBar"}`,
+        width: 460,
+        height: 400,
+        resizable: false,
+        position: "center",
+        focus: true,
+        show: true,
+      },
+      function (win) {
+        aboutWinOpening = false;
+        aboutWin = win;
+        win.on("loaded", () => {
+          const w = win.window;
+          if (w && typeof w.initAbout === "function") {
+            w.initAbout({
+              version: manifest.version_name || manifest.version,
+              openExternal: (url) => nw.Shell.openExternal(url),
+              close: () => win.close(true),
+            });
+          }
+          win.focus();
+        });
+        win.on("closed", () => {
+          aboutWin = null;
+        });
+      }
+    );
+  }
+
   function closeUnlockWindow() {
     if (!unlockWin) return;
     const w = unlockWin;
@@ -299,6 +349,7 @@
     showMainWindow,
     hideMainWindow,
     openUnlockWindow,
+    openAboutWindow,
     quit: quitApp,
     isPanelAvailable,
     getState: () => state,

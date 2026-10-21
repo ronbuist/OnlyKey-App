@@ -1,9 +1,9 @@
 {
-  "name": "OnlyKey-MenuBar",
-  "productName": "OnlyKey Menu Bar",
-  "version": "0.1.0",
-  "version_name": "0.1.0 (based on OnlyKey App 5.5.0)",
-  "description": "Setup and configure OnlyKey",
+  "name": "KeyBar",
+  "productName": "KeyBar",
+  "version": "0.2.0",
+  "version_name": "0.2.0 (based on OnlyKey App 5.5.0)",
+  "description": "Menu-bar app to set up and configure OnlyKey devices (unofficial fork of the OnlyKey App)",
   "main": "app.html",
   "scripts": {
     "build": "node tasks/build.js",
@@ -37,7 +37,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trustcrypto/OnlyKey-App.git"
+    "url": "git+https://github.com/ronbuist/OnlyKey-App.git"
   },
   "keywords": [
     "OnlyKey",
@@ -51,9 +51,9 @@
   "author": "CryptoTrust <admin@crp.to>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://onlykey.discourse.group/"
+    "url": "https://github.com/ronbuist/OnlyKey-App/issues"
   },
-  "homepage": "https://github.com/trustcrypto/OnlyKey-App#readme",
+  "homepage": "https://github.com/ronbuist/OnlyKey-App#readme",
   "window": {
     "id": "onlykey-main",
     "icon": "icon.png",

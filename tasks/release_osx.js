@@ -79,7 +79,7 @@ const prepareOsSpecificThings = function () {
     tmpDir.remove('Info.overlay.plist');
 
     // Icon
-    projectDir.copy('resources/osx/icon.icns', finalAppDir.path('Contents/Resources/icon.icns'), { overwrite: true });
+    projectDir.copy('resources/keybar/icon.icns', finalAppDir.path('Contents/Resources/icon.icns'), { overwrite: true });
 
     // Rename executable, so it looks nice in the installer
     jetpack.rename(finalAppDir.path('Contents/MacOS/nwjs'), manifest.productName);
@@ -117,12 +117,14 @@ const copyAppToReleases = function () {
     return Q();
 };
 
-// DMG window layout: a compact window with the app on the left and the
-// Applications shortcut on the right (Finder coordinates, icon centres).
-const DMG_WINDOW = { width: 480, height: 260 };
+// DMG window layout: a compact window with the app on the left, the
+// Applications shortcut on the right and the license centred below them
+// (Finder coordinates, icon centres).
+const DMG_WINDOW = { width: 480, height: 380 };
 const DMG_ICON_SIZE = 96;
-const DMG_APP_POSITION = [130, 120];
-const DMG_APPLICATIONS_POSITION = [350, 120];
+const DMG_APP_POSITION = [130, 110];
+const DMG_APPLICATIONS_POSITION = [350, 110];
+const DMG_LICENSE_POSITION = [240, 255];
 
 const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
@@ -146,6 +148,7 @@ const layoutDmgWindow = function (mountPoint, appName) {
             set text size of opts to 13
             set position of item "${appName}" of dmgFolder to {${DMG_APP_POSITION.join(', ')}}
             set position of item "Applications" of dmgFolder to {${DMG_APPLICATIONS_POSITION.join(', ')}}
+            set position of item "LICENSE.txt" of dmgFolder to {${DMG_LICENSE_POSITION.join(', ')}}
             update dmgFolder without registering applications
             delay 1
             close w
@@ -181,6 +184,8 @@ const packToDmgFile = function () {
     const staging = tmpDir.dir('dmg', { empty: true });
     run('ditto', [finalAppDir.path(), staging.path(appName)]);
     run('ln', ['-s', '/Applications', staging.path('Applications')]);
+    // The license must accompany binary distributions (LICENSE.txt, clause 2).
+    projectDir.copy('LICENSE.txt', staging.path('LICENSE.txt'), { overwrite: true });
 
     console.log('Packaging to DMG file...');
 

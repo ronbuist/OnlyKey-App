@@ -77,7 +77,7 @@ if (chrome.passwordsPrivate) {
             </label>
             <p>
               Enter a 7-10 digit PIN code using ONLY the numbers 1 - 6. Using the numbers 1 - 6 allows 
-              you to physically enter the PIN onto OnlyKey in the event that the OnlyKey App is not available. 
+              you to physically enter the PIN onto OnlyKey in the event that KeyBar is not available. 
             </p>
             <p>
               Example of a <em>good</em> PIN: '32536145'
@@ -86,7 +86,7 @@ if (chrome.passwordsPrivate) {
               Examples of <em>bad</em> PINs: '1234567' '1111112' '1231231'
             </p>
             <p>
-              Once set, your PIN can be entered via the OnlyKey App or by physically touching device buttons. Touch buttons 1, 2, 3 to enter 1, 2, 3 and hold (for 1 second) buttons 1, 2, 3 to enter 4, 5, 6.
+              Once set, your PIN can be entered via KeyBar or by physically touching device buttons. Touch buttons 1, 2, 3 to enter 1, 2, 3 and hold (for 1 second) buttons 1, 2, 3 to enter 4, 5, 6.
             </p>
             <div class='flex-container'>
               <div class='flex-item col-3'>
