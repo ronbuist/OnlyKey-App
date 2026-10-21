@@ -34,3 +34,13 @@ module.exports.getNodeModulesDir = function (params = {}) {
 function getEnvName() {
   return argv.env || "development";
 }
+
+// A promise with its resolve/reject functions exposed (replaces Q.defer()).
+module.exports.defer = function () {
+  const deferred = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+};

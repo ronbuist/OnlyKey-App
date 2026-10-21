@@ -89,7 +89,9 @@ To keep known vulnerabilities out (`npm audit`), this branch:
   `https` module (`app/scripts/httpsGet.js`), used for the firmware update check;
 - builds with plain Node.js scripts (`tasks/build.js`, `tasks/release.js`) instead of
   gulp, and the DMG with `hdiutil` instead of `appdmg`;
-- drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`);
+- drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`, `eslint`, `json`) and
+  replaces the old `q` promise library with native promises, so `npm install` shows no
+  deprecation warnings;
 - makes `nw` (the NW.js download helper) a build-time dependency only, so the app itself
   contains just `auto-launch`, `sshpk`, `js-sha256` and their sub-packages;
 - generates `THIRD-PARTY-NOTICES.txt` with the licenses of everything bundled, shown in

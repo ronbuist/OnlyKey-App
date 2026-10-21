@@ -1,6 +1,6 @@
 'use strict';
 
-var Q = require('q');
+const { defer } = require('./utils');
 var childProcess = require('child_process');
 var jetpack = require('fs-jetpack');
 var utils = require('./utils');
@@ -25,7 +25,7 @@ var init = function (params={}) {
     packName = manifest.name + '_' + manifest.version;
     packDir = tmpDir.dir(packName);
     readyAppDir = packDir.cwd('opt', manifest.name);
-    return Q();
+    return Promise.resolve();
 };
 
 var copyRuntime = function () {
@@ -57,11 +57,11 @@ var prepareOsSpecificThings = function () {
     // mode >=0755 и <=0775
     packDir.write('DEBIAN/postinst' , postinst, {mode: '755'});
 
-    return Q();
+    return Promise.resolve();
 };
 
 var updateRuntimeFileMode = function () {
-    var deferred = Q.defer();
+    var deferred = defer();
 
     console.log('chmodding nwjs runtime...');
 
@@ -79,7 +79,7 @@ var updateRuntimeFileMode = function () {
 };
 
 var packToDebFile = function () {
-    var deferred = Q.defer();
+    var deferred = defer();
 
     var debFileName = packName + '_amd64.deb';
     var debPath = releasesDir.path(debFileName);

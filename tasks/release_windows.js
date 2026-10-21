@@ -1,6 +1,6 @@
 'use strict';
 
-var Q = require('q');
+const { defer } = require('./utils');
 var childProcess = require('child_process');
 var jetpack = require('fs-jetpack');
 var utils = require('./utils');
@@ -21,7 +21,7 @@ var init = function (params={}) {
     node_modules_dir = params.node_modules_dir || 'node_modules';
 
     readyAppDir = tmpDir.cwd(manifest.name);
-    return Q();
+    return Promise.resolve();
 };
 
 var copyRuntime = function () {
@@ -37,7 +37,7 @@ var prepareOsSpecificThings = function () {
 };
 
 var createInstaller = function () {
-    var deferred = Q.defer();
+    var deferred = defer();
 
     var finalPackageName = manifest.name + '_' + manifest.version + '.exe';
     var installScript = projectDir.read('resources/windows/installer.nsi');

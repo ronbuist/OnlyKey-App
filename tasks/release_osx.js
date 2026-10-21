@@ -1,6 +1,5 @@
 'use strict';
 
-const Q = require('q');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const jetpack = require('fs-jetpack');
@@ -26,7 +25,7 @@ const init = function (params={}) {
     arch = nwjs.targetArch();
 
     finalAppDir = tmpDir.cwd(manifest.productName + '.app');
-    return Q();
+    return Promise.resolve();
 };
 
 const copyRuntime = function () {
@@ -41,7 +40,7 @@ const copyRuntime = function () {
     finalAppDir.find('Contents/Resources', { matching: '*.lproj/*', files: true, directories: false })
         .forEach((file) => finalAppDir.remove(file));
 
-    return Q();
+    return Promise.resolve();
 };
 
 const copyBuiltApp = function () {
@@ -84,7 +83,7 @@ const prepareOsSpecificThings = function () {
     // Rename executable, so it looks nice in the installer
     jetpack.rename(finalAppDir.path('Contents/MacOS/nwjs'), manifest.productName);
 
-    return Q();
+    return Promise.resolve();
 };
 
 const checkArchitecture = function () {
@@ -95,7 +94,7 @@ const checkArchitecture = function () {
         throw new Error(`Expected a ${arch} build, but the NW.js runtime is "${archs}". ` +
             `Delete node_modules and run "npm install" again (NWJS_ARCH=${arch}).`);
     }
-    return Q();
+    return Promise.resolve();
 };
 
 const signApp = function () {
@@ -106,7 +105,7 @@ const signApp = function () {
     console.log(`Code signing with identity "${identity}"...`);
     run('codesign', ['--force', '--deep', '--sign', identity, finalAppDir.path()]);
     run('codesign', ['--verify', '--deep', '--strict', finalAppDir.path()]);
-    return Q();
+    return Promise.resolve();
 };
 
 const copyAppToReleases = function () {
@@ -114,7 +113,7 @@ const copyAppToReleases = function () {
     releasesDir.remove(`${manifest.productName}.app`);
     run('ditto', [finalAppDir.path(), target]);
     console.log('App ready!', target);
-    return Q();
+    return Promise.resolve();
 };
 
 // DMG window layout: a compact window with the app on the left, the
@@ -213,7 +212,7 @@ const packToDmgFile = function () {
         '-o', releasesDir.path(dmgName)]);
     tmpDir.remove('rw.dmg');
     console.log('DMG file ready!', releasesDir.path(dmgName));
-    return Q();
+    return Promise.resolve();
 };
 
 const cleanClutter = function () {
