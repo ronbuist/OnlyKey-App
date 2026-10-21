@@ -74,8 +74,6 @@ this branch does not set up.)
   when you plug in the key. On macOS this is a launch agent
   (`~/Library/LaunchAgents/OnlyKey Menu Bar.plist`), not a login item, so no
   "control System Events" permission is needed.
-- *App Settings → Automatically check for app updates* points at the official
-  CryptoTrust releases, which would replace this build. You may want to turn it off.
 - Settings are separate from the official app, so preferences you set there don't carry
   over. If the official app is set to start at login, turn that off (in the official
   app, or in System Settings → General → Login Items) so only one copy runs.
@@ -88,7 +86,11 @@ To keep known vulnerabilities out (`npm audit`), this branch:
   `https` module (`app/scripts/httpsGet.js`), used for the firmware update check;
 - builds with plain Node.js scripts (`tasks/build.js`, `tasks/release.js`) instead of
   gulp, and the DMG with `hdiutil` instead of `appdmg`;
-- drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`).
+- drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`);
+- removes the automatic app update check (`nw-autoupdater`): it checked the official
+  CryptoTrust releases, which would replace this build. The firmware update check stays.
+
+`npm audit` reports 0 vulnerabilities.
 
 ## If the key isn't detected
 

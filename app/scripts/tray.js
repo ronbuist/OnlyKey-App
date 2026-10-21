@@ -96,23 +96,12 @@
     }
   });
 
-  const autoUpdateMenuItem = new nw.MenuItem({
-    label: 'Automatically check for app updates',
-    click: function () {
-      userPreferences.autoUpdate = !userPreferences.autoUpdate;
-      console.info(`Toggled autoUpdate to ${userPreferences.autoUpdate}`);
-      refreshMenuItem(autoUpdateMenuItem, 1);
-    },
-    type: 'checkbox',
-    checked: userPreferences.autoUpdate,
-  });
-
   const autoUpdateFWMenuItem = new nw.MenuItem({
     label: 'Automatically check for firmware updates',
     click: function () {
       userPreferences.autoUpdateFW = !userPreferences.autoUpdateFW;
       console.info(`Toggled autoUpdateFW to ${userPreferences.autoUpdateFW}`);
-      refreshMenuItem(autoUpdateFWMenuItem, 2);
+      refreshMenuItem(autoUpdateFWMenuItem, 1);
     },
     type: 'checkbox',
     checked: userPreferences.autoUpdateFW,
@@ -133,7 +122,6 @@
     if (!linux) tray.tooltip = 'OnlyKey Configuration App settings';
 
     settingsMenu.append(autoLaunchMenuItem);
-    settingsMenu.append(autoUpdateMenuItem);
     settingsMenu.append(autoUpdateFWMenuItem);
 
     // using setTimeout to counteract anomalies including empty tray menu
@@ -179,7 +167,6 @@
 
     // the existing preference checkboxes move into a submenu
     settingsMenu.append(autoLaunchMenuItem);
-    settingsMenu.append(autoUpdateMenuItem);
     settingsMenu.append(autoUpdateFWMenuItem);
     const settingsItem = new nw.MenuItem({ label: 'App Settings', submenu: settingsMenu });
 
