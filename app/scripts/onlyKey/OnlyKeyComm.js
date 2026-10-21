@@ -1554,7 +1554,11 @@ var handleMessage = async function (err, msg) {
   }
 };
 
+let initDone = false;
 function init() {
+  // Also called from dialog-links.js, in case the load event never fires (PR #243).
+  if (initDone) return;
+  initDone = true;
   console.info("OnlyKeyComm init() called");
   initializeWindow();
   myOnlyKey.setConnection(-1);
@@ -2609,6 +2613,7 @@ function setOkVersionStr() {
 }
 
 window.addEventListener("load", init);
+window.startOnlyKeyComm = init;
 
 function hexToModhex(inputStr, reverse) {
   // 0123 4567 89ab cdef

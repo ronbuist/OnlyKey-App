@@ -120,14 +120,24 @@ const copyAppToReleases = function () {
 const packToDmgFile = function () {
     const deferred = Q.defer();
 
+    const dmgName = `${manifest.name}_${manifest.version}_${arch}.dmg`;
+
     let appdmg;
     try {
         appdmg = require('appdmg');
     } catch (e) {
-        console.warn('appdmg is not installed, skipping DMG (the .app is in releases/).');
+        // appdmg has native dependencies that don't always build (e.g. on newer
+        // Node versions); plain hdiutil always works, just without the background.
+        console.log('appdmg not available, building a plain DMG with hdiutil...');
+        const staging = tmpDir.dir('dmg');
+        run('ditto', [finalAppDir.path(), staging.path(`${manifest.productName}.app`)]);
+        run('ln', ['-s', '/Applications', staging.path('Applications')]);
+        releasesDir.remove(dmgName);
+        run('hdiutil', ['create', '-volname', manifest.productName, '-srcfolder', staging.path(),
+            '-ov', '-format', 'UDZO', releasesDir.path(dmgName)]);
+        console.log('DMG file ready!', releasesDir.path(dmgName));
         return Q();
     }
-    const dmgName = `${manifest.name}_${manifest.version}_${arch}.dmg`;
 
     // Prepare appdmg config
     let dmgManifest = projectDir.read('resources/osx/appdmg.json');
