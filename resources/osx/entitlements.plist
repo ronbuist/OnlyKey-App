@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements for signing KeyBar with the Hardened Runtime.
+  Identical to the entitlements of the official OnlyKey App 5.5.0 (CryptoTrust,
+  checked with: codesign -d (entitlements) "/Applications/OnlyKey App.app"),
+  for the app and all NW.js helper apps.
+
+  The cs.* exceptions are what NW.js / its JavaScript engine needs to run under the
+  Hardened Runtime. The files.* and network.* keys only apply inside the App Sandbox,
+  which is off, so they have no effect; they are kept to match the official app.
+-->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.app-sandbox</key>
+  <false/>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+  <key>com.apple.security.cs.disable-executable-page-protection</key>
+  <true/>
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+  <key>com.apple.security.files.downloads.read-write</key>
+  <true/>
+  <key>com.apple.security.files.user-selected.read-write</key>
+  <true/>
+  <key>com.apple.security.network.client</key>
+  <true/>
+  <key>com.apple.security.network.server</key>
+  <true/>
+</dict>
+</plist>

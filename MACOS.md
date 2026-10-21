@@ -66,12 +66,26 @@ To build an Intel version on an Apple Silicon Mac instead, remove `node_modules`
 The release is ad-hoc signed (`codesign --sign -`), which is what Apple Silicon needs to
 run the app on the Mac that built it. Because you built it yourself, macOS does not put
 it in quarantine and should open it without warnings. If you copy the app to another
-Mac, macOS will warn the first time: right-click it and choose *Open*.
+Mac, macOS blocks it the first time: allow it under System Settings → Privacy & Security
+→ *Open Anyway*.
 
-With an Apple Developer ID you can sign it properly:
-`CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" npm run release`.
-(Distributing it publicly would also need the hardened runtime and notarization, which
-this branch does not set up.)
+The app and all its NW.js helper apps are signed with the **Hardened Runtime**, like the
+official OnlyKey App: other programs can't inject code into KeyBar or attach a debugger
+to it. The entitlements (`resources/osx/entitlements.plist`) are identical to the official
+app's; they allow what NW.js's JavaScript engine needs. The build checks that every part
+got the Hardened Runtime. To sign without it (e.g. while troubleshooting):
+`HARDENED_RUNTIME=0 npm run release`.
+
+Compared with the official app, what an ad-hoc signature can't provide is a Developer ID
+(proof of who made it) and Apple's notarization. With an Apple Developer ID you can sign
+it properly: `CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" npm run release`
+(notarization is not set up).
+
+To check a build:
+
+    codesign -dv --verbose=4 /Applications/KeyBar.app 2>&1 | grep -E "Signature|flags|Runtime"
+
+shows `Signature=adhoc` and `flags=0x10002(adhoc,runtime)`.
 
 ### After installing
 

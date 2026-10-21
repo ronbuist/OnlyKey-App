@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const jetpack = require('fs-jetpack');
 const { replace } = require('./utils');
 const nwjs = require('./nwjs');
@@ -101,10 +101,33 @@ const signApp = function () {
     // Changing Info.plist and adding app.nw invalidates NW.js's signature, and
     // Apple Silicon Macs refuse to start unsigned arm64 code. Re-sign the bundle:
     // ad-hoc ("-") by default, or with your Developer ID via CODESIGN_IDENTITY.
+    //
+    // With the Hardened Runtime (like the official OnlyKey App), so other programs
+    // can't inject code into KeyBar or attach a debugger to it. The entitlements in
+    // resources/osx/entitlements.plist are the same as the official app's.
+    // Build with HARDENED_RUNTIME=0 to sign without it.
     const identity = process.env.CODESIGN_IDENTITY || '-';
-    console.log(`Code signing with identity "${identity}"...`);
-    run('codesign', ['--force', '--deep', '--sign', identity, finalAppDir.path()]);
+    const hardened = process.env.HARDENED_RUNTIME !== '0';
+    const args = ['--force', '--deep', '--sign', identity];
+    if (hardened) {
+        args.push('--options', 'runtime', '--entitlements', projectDir.path('resources/osx/entitlements.plist'));
+    }
+    console.log(`Code signing with identity "${identity}"${hardened ? ', Hardened Runtime' : ' (no Hardened Runtime)'}...`);
+    run('codesign', [...args, finalAppDir.path()]);
     run('codesign', ['--verify', '--deep', '--strict', finalAppDir.path()]);
+
+    if (hardened) {
+        // check that the app and every helper app really got the runtime flag
+        const helpers = finalAppDir.find('Contents/Frameworks', { matching: '**/Helpers/*.app', directories: true, files: false });
+        [finalAppDir.path(), ...helpers.map((h) => finalAppDir.path(h))].forEach((bundle) => {
+            // codesign -dv writes its details to stderr
+            const details = spawnSync('codesign', ['-dv', bundle], { encoding: 'utf8' }).stderr || '';
+            if (!/flags=0x[0-9a-f]*\(.*runtime.*\)/.test(details)) {
+                throw new Error(`Hardened Runtime is not set on ${bundle}`);
+            }
+        });
+        console.log(`Hardened Runtime set on the app and ${helpers.length} helper apps.`);
+    }
     return Promise.resolve();
 };
 
