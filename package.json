@@ -47,6 +47,9 @@
   ],
   "author": "CryptoTrust <admin@crp.to>",
   "license": "SEE LICENSE IN LICENSE.txt",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "bugs": {
     "url": "https://github.com/ronbuist/OnlyKey-App/issues"
   },

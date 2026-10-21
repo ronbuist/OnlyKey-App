@@ -32,8 +32,13 @@ Windows and Linux behave as before (window at startup, tray menu with settings o
 
 ## Building on your Mac
 
-Requirements: macOS 11 or later, Node.js 20 or later, and the Xcode command line tools
-(`xcode-select --install`; needed for `codesign` and `lipo`).
+Requirements: macOS 11 or later, the Xcode command line tools (`xcode-select --install`;
+needed for `codesign` and `lipo`), and **Node.js 22.12 or later**.
+
+About the Node.js version: 22.12 is the minimum, because the NW.js download tool needs it
+(`package.json` says so in `engines`, so npm warns on older versions). KeyBar has been built
+and tested with **Node.js 22 LTS** (22.23), which is the recommended version. All packages
+also accept Node.js 24 and 26, but builds with those have not been tested yet.
 
 ```sh
 git clone <your fork> OnlyKey-App

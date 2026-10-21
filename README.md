@@ -81,8 +81,8 @@ For questions about OnlyKey itself:
 ## Developer Notes
 
 This repository contains shared code that can be used to build multiple types of
-apps. The build uses plain Node.js scripts in `tasks/` (no gulp); Node.js 22 is
-recommended.
+apps. The build uses plain Node.js scripts in `tasks/` (no gulp). It needs Node.js 22.12 or
+later; Node.js 22 LTS is the tested and recommended version (see [MACOS.md](MACOS.md)).
 
 To run as NWJS app in development mode (rebuilds when files in `app/` change):
 
