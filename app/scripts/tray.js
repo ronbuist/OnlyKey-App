@@ -11,7 +11,8 @@
   const linux = os.platform() === 'linux';
 
   const appPath = osx ? require('./scripts/non-renderer-app-path') : process.execPath;
-  const appName = appPath.includes('node_modules') ? 'OnlyKey-dev' : 'OnlyKey';
+  const productName = (nw.App.manifest && nw.App.manifest.productName) || 'OnlyKey';
+  const appName = appPath.includes('node_modules') ? `${productName}-dev` : productName;
 
   const logParams = {
     location: 'tray.js',
@@ -151,7 +152,7 @@
     const settingsItem = new nw.MenuItem({ label: 'App Settings', submenu: settingsMenu });
 
     const quitItem = new nw.MenuItem({
-      label: 'Quit OnlyKey App',
+      label: `Quit ${productName}`,
       key: 'q',
       modifiers: 'cmd',
       click: () => menuBar.quit(),

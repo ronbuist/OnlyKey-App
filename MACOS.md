@@ -18,6 +18,11 @@ This branch changes how the app behaves on macOS:
   comes to the front first, so the question is never hidden.
 - **Native Apple Silicon (arm64) build**, based on NW.js 0.117.0.
 
+- **Installs next to the official app.** This build is called *OnlyKey Menu Bar*, with
+  its own bundle ID, settings folder and login item, so it doesn't replace or interfere
+  with the official *OnlyKey App*. Only run one of the two at a time, because both
+  want to talk to the key.
+
 Windows and Linux behave as before (window at startup, tray menu with settings only).
 
 ## Building on your Mac
@@ -37,8 +42,8 @@ npm run release
 
 `npm run release` produces:
 
-- `releases/OnlyKey App.app` – drag it to `/Applications`
-- `releases/OnlyKey_5.5.0_arm64.dmg` – if the optional `appdmg` package installed
+- `releases/OnlyKey Menu Bar.app` – drag it to `/Applications`
+- `releases/OnlyKey-MenuBar_5.5.0_arm64.dmg` – if the optional `appdmg` package installed
 
 The release step checks that the executable really is `arm64` and stops if it isn't.
 
@@ -64,8 +69,9 @@ this branch does not set up.)
   there when you plug in the key.
 - *App Settings → Automatically check for app updates* points at the official
   CryptoTrust releases, which would replace this build. You may want to turn it off.
-- If you used the official app before, quit it and remove it from your login items so
-  that only one copy is running.
+- Settings are separate from the official app, so preferences you set there don't carry
+  over. If the official app is set to start at login, turn that off (in the official
+  app, or in System Settings → General → Login Items) so only one copy runs.
 
 ## If the key isn't detected
 

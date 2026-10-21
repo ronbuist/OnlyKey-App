@@ -42,9 +42,12 @@ function getSupportedDevice(deviceInfo) {
 }
 
 chrome.app.runtime.onLaunched.addListener(function() {
+  // macOS desktop app: start hidden, it lives in the menu bar (see scripts/menubar.js)
+  const menuBarMode = typeof nw != 'undefined' && require('os').platform() === 'darwin';
   chrome.app.window.create(
       "app.html", {
-        outerBounds: { width: 1024, height: 768 }
+        outerBounds: { width: 1024, height: 768 },
+        hidden: menuBarMode
       });
 });
     
@@ -107,7 +110,8 @@ if (typeof nw == 'undefined') {
     // default autoLaunch to true if first time running app
     const AutoLaunch = require('auto-launch');
     const appPath = require('./scripts/non-renderer-app-path');
-    const appName = appPath.includes('nwjs Helper') ? 'OnlyKey-dev' : 'OnlyKey';
+    const productName = (nw.App.manifest && nw.App.manifest.productName) || 'OnlyKey';
+    const appName = appPath.includes('node_modules') ? `${productName}-dev` : productName;
     const userPreferences = require('./scripts/userPreferences.js');
     const os = require('os');
     const osx = os.platform() === 'darwin';

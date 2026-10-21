@@ -87,11 +87,14 @@
   }
 
   if (osx) {
+    // Start hidden (package.json "show": false / app.js "hidden" should already do this).
+    mainWin.hide();
+
     // Standard Edit menu, so Cmd+C / Cmd+V / Cmd+A work in text fields even though
     // the app has no visible menu bar of its own.
     try {
       const appMenu = new nw.Menu({ type: "menubar" });
-      appMenu.createMacBuiltin("OnlyKey App", { hideWindow: true });
+      appMenu.createMacBuiltin((nw.App.manifest && nw.App.manifest.productName) || "OnlyKey", { hideWindow: true });
       mainWin.menu = appMenu;
     } catch (e) {
       console.warn("menubar.js: could not create macOS builtin menu", e);
