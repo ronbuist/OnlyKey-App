@@ -118,15 +118,23 @@ const signApp = function () {
 
     if (hardened) {
         // check that the app and every helper app really got the runtime flag
-        const helpers = finalAppDir.find('Contents/Frameworks', { matching: '**/Helpers/*.app', directories: true, files: false });
-        [finalAppDir.path(), ...helpers.map((h) => finalAppDir.path(h))].forEach((bundle) => {
+        // The framework's version folder is reachable via several symlinks
+        // (Versions/<v>, Versions/Current, top-level Helpers), so the same helper is
+        // found more than once: keep each real path only once.
+        const fs = require('fs');
+        const helpers = [...new Set(
+            finalAppDir.find('Contents/Frameworks', { matching: '**/Helpers/*.app', directories: true, files: false })
+                .map((h) => fs.realpathSync(finalAppDir.path(h)))
+        )];
+        [finalAppDir.path(), ...helpers].forEach((bundle) => {
             // codesign -dv writes its details to stderr
             const details = spawnSync('codesign', ['-dv', bundle], { encoding: 'utf8' }).stderr || '';
             if (!/flags=0x[0-9a-f]*\(.*runtime.*\)/.test(details)) {
                 throw new Error(`Hardened Runtime is not set on ${bundle}`);
             }
         });
-        console.log(`Hardened Runtime set on the app and ${helpers.length} helper apps.`);
+        console.log(`Hardened Runtime set on the app and ${helpers.length} helper apps: ` +
+            helpers.map((h) => path.basename(h, '.app')).join(', '));
     }
     return Promise.resolve();
 };
