@@ -42,13 +42,17 @@ function getSupportedDevice(deviceInfo) {
 }
 
 chrome.app.runtime.onLaunched.addListener(function() {
-  // macOS desktop app: start hidden, it lives in the menu bar (see scripts/menubar.js)
+  // macOS desktop app: start hidden and without a Dock icon, it lives in the
+  // menu bar (see scripts/menubar.js). show_in_taskbar:false is how NW.js turns
+  // the app into a menu-bar app; do NOT use LSUIElement in Info.plist for this,
+  // Chromium then mistakes the app for one of its helper processes and crashes.
   const menuBarMode = typeof nw != 'undefined' && require('os').platform() === 'darwin';
-  chrome.app.window.create(
-      "app.html", {
-        outerBounds: { width: 1024, height: 768 },
-        hidden: menuBarMode
-      });
+  const windowOptions = { outerBounds: { width: 1024, height: 768 } };
+  if (menuBarMode) {
+    windowOptions.hidden = true;
+    windowOptions.show_in_taskbar = false;
+  }
+  chrome.app.window.create("app.html", windowOptions);
 });
     
 var onDevicesEnumerated = async function (devices) {

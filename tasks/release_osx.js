@@ -65,6 +65,12 @@ const prepareOsSpecificThings = function () {
 
     const targetPlist = finalAppDir.path('Contents/Info.plist');
     const overlay = plistToJson(tmpDir.path('Info.overlay.plist'));
+    if (overlay.LSUIElement || overlay.LSBackgroundOnly) {
+        // Chromium treats a bundle with LSUIElement as one of its helper processes,
+        // looks for its framework in the wrong place and aborts ("icudtl.dat not found").
+        // The Dock icon is hidden at runtime instead (show_in_taskbar: false).
+        throw new Error('Do not set LSUIElement / LSBackgroundOnly in resources/osx/Info.plist: NW.js crashes at startup.');
+    }
     Object.keys(overlay).forEach((key) => {
         const value = overlay[key];
         const type = typeof value === 'boolean' ? 'bool' : 'string';

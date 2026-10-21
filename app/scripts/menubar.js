@@ -87,8 +87,16 @@
   }
 
   if (osx) {
-    // Start hidden (package.json "show": false / app.js "hidden" should already do this).
+    // Start hidden and without a Dock icon (app.js normally does this already when it
+    // creates the window). NW.js's setShowInTaskbar(false) makes the whole app a
+    // menu-bar app on macOS. Don't use LSUIElement in Info.plist instead: Chromium
+    // then takes the app for one of its helper processes and crashes at startup.
     mainWin.hide();
+    try {
+      mainWin.setShowInTaskbar(false);
+    } catch (e) {
+      console.warn("menubar.js: setShowInTaskbar(false) failed", e);
+    }
 
     // Standard Edit menu, so Cmd+C / Cmd+V / Cmd+A work in text fields even though
     // the app has no visible menu bar of its own.

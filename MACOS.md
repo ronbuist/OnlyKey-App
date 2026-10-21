@@ -2,8 +2,11 @@
 
 This branch changes how the app behaves on macOS:
 
-- **No Dock icon, no window at startup.** The app lives in the menu bar only
-  (`LSUIElement` in `resources/osx/Info.plist`, `"show": false` in `package.json`).
+- **No Dock icon, no window at startup.** The app lives in the menu bar only. The main
+  window is created hidden with NW.js's `show_in_taskbar: false`, which removes the
+  Dock icon while the app runs (`app/app.js`, `app/scripts/menubar.js`). Don't use
+  `LSUIElement` in `Info.plist` for this: Chromium then crashes at startup
+  ("icudtl.dat not found in bundle"), and the release script refuses to build it.
 - **Everything from the menu-bar icon:** connection status, *Unlock OnlyKey…*,
   *Open OnlyKey App*, direct shortcuts to Slots, Keys, Backup / Restore, Firmware,
   Preferences, Advanced, Tools and Setup, the existing app settings, and *Quit*.
