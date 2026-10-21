@@ -120,8 +120,11 @@
     checked: userPreferences.autoUpdateFW,
   });
 
+  // macOS: the KeyBar key, greyed out (35 % opacity) while no OnlyKey is connected.
+  const TRAY_ICON_CONNECTED = './images/keybar-tray.png';
+  const TRAY_ICON_DISCONNECTED = './images/keybar-tray-disconnected.png';
   const tray = new nw.Tray({
-    icon: osx ? './images/keybar-tray.png' : './images/ok-tray-logo.png',
+    icon: osx ? TRAY_ICON_DISCONNECTED : './images/ok-tray-logo.png',
   });
   // keep a global reference, otherwise the icon can disappear when garbage-collected
   window.okTray = tray;
@@ -218,7 +221,13 @@
     };
 
     let lastSignature = '';
+    let trayConnected = false;
     const refresh = (state) => {
+      if (state.connected !== trayConnected) {
+        trayConnected = state.connected;
+        tray.icon = trayConnected ? TRAY_ICON_CONNECTED : TRAY_ICON_DISCONNECTED;
+      }
+
       const status = describe(state);
       const unlockEnabled = state.connected && state.locked && state.initialized && !state.bootloader;
       const panels = panelItems.map(({ panel }) => menuBar.isPanelAvailable(panel));
