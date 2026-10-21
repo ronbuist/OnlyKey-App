@@ -1,21 +1,31 @@
-# OnlyKey Menu Bar
+<img src="resources/keybar/keybar_128.png" width="96" alt="" align="left" />
+
+# KeyBar
+
+*for OnlyKey devices*
+
+<br clear="left" />
 
 > **This is an unofficial fork of the [OnlyKey App](https://github.com/trustcrypto/OnlyKey-App).**
 > It is not made, endorsed or supported by CryptoTrust, the makers of OnlyKey.
 > For the official app, installers and support, go to
 > [trustcrypto/OnlyKey-App](https://github.com/trustcrypto/OnlyKey-App).
 
-**OnlyKey Menu Bar** is based on OnlyKey App 5.5.0 and changes how the app works on macOS:
+**KeyBar** is based on OnlyKey App 5.5.0 and changes how the app works on macOS:
 
 - **Menu-bar app:** no Dock icon and no window that is always open. Everything is reached
-  from the OnlyKey icon in the menu bar: the key's status, unlocking, and shortcuts to
+  from the KeyBar icon (a key) in the menu bar: the key's status, unlocking, and shortcuts to
   Slots, Keys, Backup/Restore, Firmware, Preferences, Advanced, Tools and Setup. The full
   window opens only when you ask for it, and closing it keeps the app running.
 - **Small unlock window:** plugging in a locked OnlyKey opens a compact window just for
   the PIN, which closes by itself once the key is unlocked.
 - **Native Apple Silicon (arm64) build**, based on NW.js 0.117 (the official app is an
   Intel build that needs Rosetta).
-- **Installs next to the official app**, with its own name, bundle ID and settings.
+- **Installs next to the official app**, with its own name, icon, bundle ID and settings.
+  (Versions 0.1.x were called *OnlyKey Menu Bar*; the name was changed because the OnlyKey
+  license doesn't allow "OnlyKey" in the name of derived products.)
+- **About window** with the version, a notice that KeyBar is not endorsed by CryptoTrust,
+  and the license.
 - **No known vulnerable dependencies** (`npm audit`: 0): the abandoned `request` package,
   gulp, `appdmg` and the app self-update check were replaced or removed.
 
@@ -49,8 +59,8 @@ takes a few minutes. See **[MACOS.md](MACOS.md)** for the requirements and steps
     $ npm run prerelease
     $ npm run release
 
-This creates `releases/OnlyKey-MenuBar_<version>_arm64.dmg`. Open it and drag
-*OnlyKey Menu Bar* to Applications. If you copy the DMG to another Mac, macOS will block
+This creates `releases/KeyBar_<version>_arm64.dmg`. Open it and drag *KeyBar* to
+Applications. If you copy the DMG to another Mac, macOS will block
 the app the first time; allow it under System Settings → Privacy & Security → *Open Anyway*.
 
 Run either this app or the official one at a time, not both: they both talk to the key.

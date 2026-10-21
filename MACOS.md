@@ -1,4 +1,4 @@
-# OnlyKey App on macOS: menu-bar mode and Apple Silicon build
+# KeyBar on macOS: menu-bar app and Apple Silicon build
 
 This branch changes how the app behaves on macOS:
 
@@ -9,11 +9,12 @@ This branch changes how the app behaves on macOS:
   `LSUIElement` in `Info.plist` for this: Chromium then crashes at startup
   ("icudtl.dat not found in bundle"), and the release script refuses to build it.
 - **Everything from the menu-bar icon:** connection status, *Unlock OnlyKey…*,
-  *Open OnlyKey App*, direct shortcuts to Slots, Keys, Backup / Restore, Firmware,
+  *Open KeyBar*, direct shortcuts to Slots, Keys, Backup / Restore, Firmware,
   Preferences, Advanced, Tools and Setup, the existing app settings, and *Quit*.
 - **Closing the window hides it.** The app keeps running in the background so it keeps
   setting the key's clock (needed for TOTP codes) every time you plug it in.
-  `Cmd+Q` or *Quit OnlyKey App* in the menu really quits.
+  `Cmd+Q` or *Quit KeyBar* in the menu really quits. *About KeyBar* shows the version,
+  that KeyBar is not endorsed by CryptoTrust, and the license.
 - **Small unlock window.** Plugging in a locked OnlyKey opens a compact window just for
   the PIN (OnlyKey DUO), or a reminder to enter the PIN on the key (original OnlyKey).
   It closes by itself once the key is unlocked. *Not now* dismisses it until the next
@@ -21,10 +22,10 @@ This branch changes how the app behaves on macOS:
 - If the app needs to ask something (e.g. "new firmware available"), the main window
   comes to the front first, so the question is never hidden.
 - **Native Apple Silicon (arm64) build**, based on NW.js 0.117.0.
-
-- **Installs next to the official app.** This build is called *OnlyKey Menu Bar*, with
+- **Installs next to the official app.** This build is called *KeyBar* (versions 0.1.x were
+  called *OnlyKey Menu Bar*; KeyBar removes their login item), with
   its own bundle ID, settings folder and login item, so it doesn't replace or interfere
-  with the official *OnlyKey App*. Only run one of the two at a time, because both
+  with the official *OnlyKey App* (its own name and icon, too). Only run one of the two at a time, because both
   want to talk to the key.
 
 Windows and Linux behave as before (window at startup, tray menu with settings only).
@@ -46,9 +47,11 @@ npm run release
 
 `npm run release` produces:
 
-- `releases/OnlyKey Menu Bar.app` – drag it to `/Applications`
-- `releases/OnlyKey-MenuBar_0.1.0_arm64.dmg` – a disk image with the app and a shortcut to
-  Applications, built with macOS's own `hdiutil`
+- `releases/KeyBar.app` – drag it to `/Applications`
+- `releases/KeyBar_0.2.0_arm64.dmg` – a disk image with the app, a shortcut to
+  Applications and `LICENSE.txt`, built with macOS's own `hdiutil`. The build asks Finder
+  to arrange the window; the first time, macOS may ask whether the terminal may control
+  Finder (if you decline, the DMG gets the default layout)
 
 The release step checks that the executable really is `arm64` and stops if it isn't.
 
@@ -72,7 +75,7 @@ this branch does not set up.)
 - The first time, start the app from `/Applications`. It turns on
   *App Settings → Auto-launch app on system login* by default, so it is always there
   when you plug in the key. On macOS this is a launch agent
-  (`~/Library/LaunchAgents/OnlyKey Menu Bar.plist`), not a login item, so no
+  (`~/Library/LaunchAgents/KeyBar.plist`), not a login item, so no
   "control System Events" permission is needed.
 - Settings are separate from the official app, so preferences you set there don't carry
   over. If the official app is set to start at login, turn that off (in the official
