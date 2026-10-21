@@ -47,7 +47,7 @@ npm run release
 `npm run release` produces:
 
 - `releases/OnlyKey Menu Bar.app` – drag it to `/Applications`
-- `releases/OnlyKey-MenuBar_5.5.0_arm64.dmg` – if the optional `appdmg` package installed
+- `releases/OnlyKey-MenuBar_0.1.0_arm64.dmg` – if the optional `appdmg` package installed
 
 The release step checks that the executable really is `arm64` and stops if it isn't.
 
