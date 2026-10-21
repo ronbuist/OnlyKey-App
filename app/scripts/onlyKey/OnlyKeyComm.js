@@ -588,6 +588,7 @@ OnlyKey.prototype.sendPin_DUO = function (pins, setpin, callback) {
       document.getElementById("max-pin-attempts-duo").classList.remove("hide");
       document.getElementById("incorrect-pin-duo").classList.add("hide");
       console.info("PIN attempts exeeded");
+      emitPinResult("max-attempts", setpin);
     } else if (msgReceived.indexOf("INITIALIZED-D") === 0) {
       // incorrect pin dialog
       document.getElementById("locked-text-duo").classList.remove("hide");
@@ -596,15 +597,24 @@ OnlyKey.prototype.sendPin_DUO = function (pins, setpin, callback) {
         document.getElementById("incorrect-pin-duo").classList.remove("hide");
       }, 2000); 
       console.info("Incorrect PIN attempt");
+      emitPinResult("incorrect", setpin);
     } else {
       // normal PIN dialog
       document.getElementById("locked-text-duo").classList.remove("hide");
       document.getElementById("max-pin-attempts-duo").classList.add("hide");
       document.getElementById("incorrect-pin-duo").classList.add("hide");
+      emitPinResult("sent", setpin);
     }
     return callback();
   });
 };
+
+function emitPinResult(result, setpin) {
+  if (typeof document === "undefined" || typeof CustomEvent === "undefined") return;
+  document.dispatchEvent(
+    new CustomEvent("onlykey:pin-result", { detail: { result, setpin: !!setpin } })
+  );
+}
 
 OnlyKey.prototype.setSlot = function (slotArg, field, value, callback) {
   let slot = slotArg || this.getSlotNum();
@@ -1209,7 +1219,41 @@ var enableIOControls = function (ioEnabled) {
     ui.showFirmwarePanel.classList.add("hide");
     dialog.close(ui.getLockedDialog(myOnlyKey));
   }
+
+  emitOnlyKeyState();
 };
+
+/**
+ * Snapshot of the connected key, shared with the menu bar (tray.js / menubar.js)
+ * and the separate unlock window.
+ */
+function getOnlyKeyState() {
+  const connected = !!myOnlyKey && myOnlyKey.connection !== -1;
+  return {
+    connected,
+    initialized: connected && !!myOnlyKey.isInitialized,
+    locked: connected && !!myOnlyKey.isLocked,
+    bootloader: connected && !!myOnlyKey.isBootloader,
+    configMode: connected && !!myOnlyKey.isConfigMode,
+    deviceType: connected ? myOnlyKey.getDeviceType() || null : null,
+  };
+}
+
+function emitOnlyKeyState() {
+  if (typeof document === "undefined" || typeof CustomEvent === "undefined") return;
+  document.dispatchEvent(
+    new CustomEvent("onlykey:state", { detail: getOnlyKeyState() })
+  );
+}
+
+// Small API for other windows / scripts (menu bar, unlock window).
+if (typeof window !== "undefined") {
+  window.OnlyKeyBridge = {
+    getState: getOnlyKeyState,
+    // Send a PIN to a locked OnlyKey DUO (same call as the "Unlock" button in the main window)
+    submitDuoPin: (pin) => myOnlyKey.sendPin_DUO([String(pin || "")], false, () => {}),
+  };
+}
 
 var enumerateDevices = function () {
   for (let d = 0; d < SUPPORTED_DEVICES.length; d++) {

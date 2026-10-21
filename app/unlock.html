@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Unlock OnlyKey</title>
+    <style>
+      @font-face {
+        font-family: "Lato";
+        src: url("/stylesheets/Lato-Regular.ttf");
+      }
+      @font-face {
+        font-family: "Lato";
+        font-weight: bold;
+        src: url("/stylesheets/Lato-Bold.ttf");
+      }
+      :root {
+        --bg: #f4f4f5;
+        --fg: #1f2328;
+        --muted: #6b7280;
+        --field: #ffffff;
+        --border: #c9cdd3;
+        --accent: #2f6fde;
+        --accent-fg: #ffffff;
+        --error: #c62828;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #232428;
+          --fg: #eceef1;
+          --muted: #9aa1ab;
+          --field: #2f3136;
+          --border: #4a4e55;
+          --accent: #4c86f0;
+          --error: #ff6b6b;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Lato", -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 22px 26px 18px;
+        height: 100%;
+      }
+      header { display: flex; align-items: center; gap: 12px; }
+      header img { width: 34px; height: 34px; border-radius: 7px; }
+      h1 { font-size: 16px; margin: 0; font-weight: bold; }
+      p { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
+      form { display: flex; gap: 8px; }
+      input[type="password"] {
+        flex: 1;
+        font-size: 18px;
+        letter-spacing: 3px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--field);
+        color: var(--fg);
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      input[type="password"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+      button {
+        font: inherit;
+        font-size: 13px;
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--field);
+        color: var(--fg);
+        cursor: pointer;
+      }
+      button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .message { min-height: 18px; font-size: 13px; }
+      .message.error { color: var(--error); }
+      footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+      .link { background: none; border: none; padding: 0; color: var(--accent); }
+      .hide { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="/images/ok-logo.jpg" alt="" />
+        <h1 id="title">Your OnlyKey is locked</h1>
+      </header>
+
+      <!-- OnlyKey DUO: PIN is typed here -->
+      <section id="duo" class="hide">
+        <p>Enter your PIN to unlock it.</p>
+        <form id="pinForm" style="margin-top: 10px">
+          <input type="password" id="pin" inputmode="numeric" autocomplete="off" autofocus />
+          <button type="submit" class="primary" id="unlockBtn">Unlock</button>
+        </form>
+      </section>
+
+      <!-- OnlyKey (classic): PIN is entered on the key's buttons -->
+      <section id="classic" class="hide">
+        <p>Enter your PIN on the OnlyKey's buttons. This window closes when the key is unlocked.</p>
+      </section>
+
+      <div id="message" class="message" role="status"></div>
+
+      <footer>
+        <button type="button" class="link" id="openMain">Open OnlyKey App</button>
+        <button type="button" id="cancel">Not now</button>
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        let api = null;
+        let busy = false;
+        let busyTimer = null;
+
+        const $ = (id) => document.getElementById(id);
+        const pin = $("pin");
+        const unlockBtn = $("unlockBtn");
+        const message = $("message");
+
+        function setMessage(text, isError) {
+          message.textContent = text || "";
+          message.classList.toggle("error", !!isError);
+        }
+
+        function setBusy(on) {
+          busy = on;
+          pin.disabled = on;
+          unlockBtn.disabled = on;
+          clearTimeout(busyTimer);
+          if (on) {
+            // Safety net: never leave the form disabled if the key doesn't answer.
+            busyTimer = setTimeout(() => {
+              setBusy(false);
+              setMessage("No answer from the OnlyKey. Please try again.", true);
+            }, 8000);
+          } else {
+            setTimeout(() => pin.focus(), 0);
+          }
+        }
+
+        $("pinForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (!api || busy) return;
+          const value = pin.value.trim();
+          if (!value) return;
+          pin.value = "";
+          setMessage("Checking PIN…");
+          setBusy(true);
+          api.submitPin(value);
+        });
+
+        $("openMain").addEventListener("click", () => api && api.openMainWindow());
+        $("cancel").addEventListener("click", () => (api ? api.close() : window.close()));
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") $("cancel").click();
+        });
+
+        // Called by menubar.js once this window has loaded.
+        window.initUnlock = function (bridge) {
+          api = bridge;
+        };
+
+        // Called by menubar.js when the key's state changes or a PIN result arrives.
+        window.updateUnlock = function (state, pinResult) {
+          const isDuo = state.deviceType === "duo";
+          $("title").textContent = isDuo ? "Your OnlyKey DUO is locked" : "Your OnlyKey is locked";
+          $("duo").classList.toggle("hide", !isDuo);
+          $("classic").classList.toggle("hide", isDuo);
+
+          switch (pinResult) {
+            case "incorrect":
+              // The app reports this right after sending, before the key has
+              // answered. A correct PIN unlocks the key within ~2 seconds and this
+              // window closes, so only show the error if we're still here then.
+              setTimeout(() => {
+                setBusy(false);
+                setMessage("Incorrect PIN. Please try again.", true);
+              }, 2000);
+              break;
+            case "max-attempts":
+              setBusy(true);
+              clearTimeout(busyTimer);
+              setMessage("Too many failed attempts. Remove and reinsert the OnlyKey to try again.", true);
+              break;
+            case "sent":
+              // Waiting for the key; success closes this window.
+              break;
+            default:
+              if (!busy) setMessage("");
+          }
+          if (isDuo && !busy) pin.focus();
+        };
+      })();
+    </script>
+  </body>
+</html>

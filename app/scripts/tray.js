@@ -88,20 +88,123 @@
   const tray = new nw.Tray({
     icon: './images/ok-tray-logo.png',
   });
-  
-  // linux tooltip resulted in menu items failing to render sometimes when the app was launched
-  if (!linux) tray.tooltip = 'OnlyKey Configuration App settings';
-  
-  settingsMenu.append(autoLaunchMenuItem);
-  settingsMenu.append(autoUpdateMenuItem);
-  settingsMenu.append(autoUpdateFWMenuItem);
-  
-  // using setTimeout to counteract anomalies including empty tray menu
-  setTimeout(() => {
-    tray.menu = settingsMenu;
-    console.info({ ...logParams, tray });
-  }, 500);
+  // keep a global reference, otherwise the icon can disappear when garbage-collected
+  window.okTray = tray;
 
+  const menuBar = osx && window.okMenuBar && window.okMenuBar.enabled ? window.okMenuBar : null;
+
+  if (!menuBar) {
+    // Windows / Linux: unchanged, the tray menu only holds the settings.
+
+    // linux tooltip resulted in menu items failing to render sometimes when the app was launched
+    if (!linux) tray.tooltip = 'OnlyKey Configuration App settings';
+
+    settingsMenu.append(autoLaunchMenuItem);
+    settingsMenu.append(autoUpdateMenuItem);
+    settingsMenu.append(autoUpdateFWMenuItem);
+
+    // using setTimeout to counteract anomalies including empty tray menu
+    setTimeout(() => {
+      tray.menu = settingsMenu;
+      console.info({ ...logParams, tray });
+    }, 500);
+  } else {
+    // macOS menu-bar mode: everything is reachable from the menu-bar icon.
+    tray.iconsAreTemplates = true; // white icon adapts to light/dark menu bar
+    tray.tooltip = 'OnlyKey';
+
+    const mainMenu = new nw.Menu();
+
+    const statusItem = new nw.MenuItem({ label: 'No OnlyKey connected', enabled: false });
+    const unlockItem = new nw.MenuItem({
+      label: 'Unlock OnlyKey…',
+      enabled: false,
+      click: () => menuBar.openUnlockWindow(),
+    });
+    const openItem = new nw.MenuItem({
+      label: 'Open OnlyKey App',
+      click: () => menuBar.showMainWindow(),
+    });
+
+    const panelItems = [
+      ['slots', 'Slots…'],
+      ['keys', 'Keys…'],
+      ['backup', 'Backup / Restore…'],
+      ['firmware', 'Firmware…'],
+      ['preferences', 'Preferences…'],
+      ['advanced', 'Advanced…'],
+      ['tools', 'Tools…'],
+      ['setup', 'Setup…'],
+    ].map(([panel, label]) => ({
+      panel,
+      item: new nw.MenuItem({
+        label,
+        enabled: false,
+        click: () => menuBar.showMainWindow(panel),
+      }),
+    }));
+
+    // the existing preference checkboxes move into a submenu
+    settingsMenu.append(autoLaunchMenuItem);
+    settingsMenu.append(autoUpdateMenuItem);
+    settingsMenu.append(autoUpdateFWMenuItem);
+    const settingsItem = new nw.MenuItem({ label: 'App Settings', submenu: settingsMenu });
+
+    const quitItem = new nw.MenuItem({
+      label: 'Quit OnlyKey App',
+      key: 'q',
+      modifiers: 'cmd',
+      click: () => menuBar.quit(),
+    });
+
+    mainMenu.append(statusItem);
+    mainMenu.append(new nw.MenuItem({ type: 'separator' }));
+    mainMenu.append(unlockItem);
+    mainMenu.append(openItem);
+    mainMenu.append(new nw.MenuItem({ type: 'separator' }));
+    panelItems.forEach(({ item }) => mainMenu.append(item));
+    mainMenu.append(new nw.MenuItem({ type: 'separator' }));
+    mainMenu.append(settingsItem);
+    mainMenu.append(new nw.MenuItem({ type: 'separator' }));
+    mainMenu.append(quitItem);
+
+    const deviceName = (state) => (state.deviceType === 'duo' ? 'OnlyKey DUO' : 'OnlyKey');
+
+    const describe = (state) => {
+      if (!state.connected) return 'No OnlyKey connected';
+      if (!state.deviceType) return 'OnlyKey connecting…';
+      if (state.bootloader) return `${deviceName(state)} – firmware update mode`;
+      if (!state.initialized) return `${deviceName(state)} – needs setup`;
+      if (state.configMode) return `${deviceName(state)} – config mode`;
+      if (state.locked) return `${deviceName(state)} – locked`;
+      return `${deviceName(state)} – unlocked`;
+    };
+
+    let lastSignature = '';
+    const refresh = (state) => {
+      const status = describe(state);
+      const unlockEnabled = state.connected && state.locked && state.initialized && !state.bootloader;
+      const panels = panelItems.map(({ panel }) => menuBar.isPanelAvailable(panel));
+
+      // only touch the native menu when something changed
+      const signature = JSON.stringify([status, unlockEnabled, panels]);
+      if (signature === lastSignature) return;
+      lastSignature = signature;
+
+      statusItem.label = status;
+      tray.tooltip = status;
+      unlockItem.enabled = unlockEnabled;
+      panelItems.forEach(({ item }, i) => (item.enabled = panels[i]));
+      tray.menu = mainMenu;
+    };
+
+    menuBar.onChange(refresh);
+    // using setTimeout to counteract anomalies including empty tray menu
+    setTimeout(() => {
+      refresh(menuBar.getState());
+      console.info({ ...logParams, tray });
+    }, 500);
+  }
 
   // discovered on linux that the menu item checked state does not live update
   function refreshMenuItem(menuItem, index) {
