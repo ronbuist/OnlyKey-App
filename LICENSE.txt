@@ -1,3 +1,19 @@
+KeyBar
+
+KeyBar is an unofficial fork of the OnlyKey App. It is not affiliated with or
+endorsed by CryptoTrust LLC or the OnlyKey Project.
+
+Modifications Copyright (c) 2026 Ron Buist.
+
+The modifications in this fork (KeyBar) were written by Claude, an AI model
+made by Anthropic, at the request and under the direction of Ron Buist. They
+are distributed under the same terms and conditions as the license below.
+
+Third-party software included in KeyBar, with its licenses, is listed in
+THIRD-PARTY-NOTICES.txt, which is included in the app (About KeyBar).
+
+------------------------------------------------------------------------------
+
 Copyright (c) 2017, CryptoTrust LLC.
 All rights reserved.
 
@@ -36,18 +52,3 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-------------------------------------------------------------------------------
-KeyBar
-
-KeyBar is an unofficial fork of the OnlyKey App. It is not affiliated with or
-endorsed by CryptoTrust LLC or the OnlyKey Project.
-
-Modifications Copyright (c) 2026 Ron Buist.
-
-The modifications in this fork (KeyBar) were written by Claude, an AI model
-made by Anthropic, at the request and under the direction of Ron Buist. They
-are distributed under the same terms and conditions as the license above.
-
-Third-party software included in KeyBar, with its licenses, is listed in
-THIRD-PARTY-NOTICES.txt, which is included in the app (About KeyBar).

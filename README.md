@@ -139,9 +139,9 @@ For more information on export restrictions see: http://www.apache.org/licenses/
 
 This product includes software developed by the OnlyKey Project (http://www.crp.to/ok).
 
-**License.** KeyBar is distributed under the license in [LICENSE.txt](LICENSE.txt): the
-original OnlyKey license (Copyright (c) 2017, CryptoTrust LLC), unchanged, followed by a short
-KeyBar section. The official app's `package.json` listed "Apache-2.0", but the license file is
+**License.** KeyBar is distributed under the license in [LICENSE.txt](LICENSE.txt): a short
+KeyBar section, followed by the original OnlyKey license (Copyright (c) 2017, CryptoTrust LLC),
+unchanged. The official app's `package.json` listed "Apache-2.0", but the license file is
 what applies; `package.json` here now says `SEE LICENSE IN LICENSE.txt`.
 
 **Who made the changes.** Modifications Copyright (c) 2026 Ron Buist. The modifications in this
