@@ -42,16 +42,12 @@ function getSupportedDevice(deviceInfo) {
 }
 
 chrome.app.runtime.onLaunched.addListener(function() {
-  // macOS desktop app: start hidden and without a Dock icon, it lives in the
-  // menu bar (see scripts/menubar.js). show_in_taskbar:false is how NW.js turns
-  // the app into a menu-bar app; do NOT use LSUIElement in Info.plist for this,
-  // Chromium then mistakes the app for one of its helper processes and crashes.
+  // macOS desktop app: start hidden, it lives in the menu bar. scripts/menubar.js
+  // removes the Dock icon with setShowInTaskbar(false). (chrome.app.window.create
+  // doesn't accept show_in_taskbar, and LSUIElement in Info.plist crashes Chromium.)
   const menuBarMode = typeof nw != 'undefined' && require('os').platform() === 'darwin';
   const windowOptions = { outerBounds: { width: 1024, height: 768 } };
-  if (menuBarMode) {
-    windowOptions.hidden = true;
-    windowOptions.show_in_taskbar = false;
-  }
+  if (menuBarMode) windowOptions.hidden = true;
   chrome.app.window.create("app.html", windowOptions);
 });
     
@@ -110,7 +106,7 @@ if (typeof nw == 'undefined') {
 
         chrome.hid.getDevices(deviceInfo, onDevicesEnumerated);
     }
-} else if (!localStorage.hasOwnProperty('autoLaunch')) {
+} else if (!require('./scripts/userPreferences.js').hasStoredValue('autoLaunch')) {
     // default autoLaunch to true if first time running app
     const AutoLaunch = require('auto-launch');
     const appPath = require('./scripts/non-renderer-app-path');

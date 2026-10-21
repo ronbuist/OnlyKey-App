@@ -19,7 +19,7 @@ let onlyKeyAppUserPreferences; // singleton
 
         set autoUpdateFW(value) {
             this._autoUpdateFW = getBoolean(value);
-            typeof localStorage !== 'undefined' && (localStorage.autoUpdateFW = getBooleanString(value));
+            setStored('autoUpdateFW', getBooleanString(value));
         }
 
         get autoLaunch() {
@@ -28,7 +28,7 @@ let onlyKeyAppUserPreferences; // singleton
 
         set autoLaunch(value) {
             this._autoLaunch = getBoolean(value);
-            typeof localStorage !== 'undefined' && (localStorage.autoLaunch = getBooleanString(value));
+            setStored('autoLaunch', getBooleanString(value));
         }
 
         get autoUpdate() {
@@ -37,19 +37,24 @@ let onlyKeyAppUserPreferences; // singleton
 
         set autoUpdate(value) {
             this._autoUpdate = getBoolean(value);
-            typeof localStorage !== 'undefined' && (localStorage.autoUpdate = getBooleanString(value));
+            setStored('autoUpdate', getBooleanString(value));
         }
 
         getPropVal(key) {
             if (this.hasOwnProperty(`_${key}`)) {
                 return this[`_${key}`];
-            } else if (typeof localStorage !== 'undefined' && localStorage.hasOwnProperty(key)) {
-                return getBoolean(localStorage[key]);
+            } else if (this.hasStoredValue(key)) {
+                return getBoolean(getStorage().getItem(key));
             } else {
                 return true;
             }
         }
     }
+
+    UserPreferences.prototype.hasStoredValue = function (key) {
+        const storage = getStorage();
+        return !!storage && storage.getItem(key) !== null;
+    };
 
     onlyKeyAppUserPreferences = onlyKeyAppUserPreferences || new UserPreferences();
     if (module && module.exports) {
@@ -59,6 +64,31 @@ let onlyKeyAppUserPreferences; // singleton
     }
 
     /* private helpers */
+
+    // This file is loaded with require(), so it runs in Node's context. Newer
+    // Node versions (NW.js 0.1xx) have their own, usually unavailable,
+    // `localStorage` global there, so look up the page's DOM storage explicitly.
+    function getStorage() {
+        const candidates = [
+            () => typeof window !== 'undefined' && window.localStorage,
+            () => typeof nw !== 'undefined' && nw.Window.get().window.localStorage,
+            () => typeof localStorage !== 'undefined' && localStorage,
+        ];
+        for (const candidate of candidates) {
+            try {
+                const storage = candidate();
+                if (storage && typeof storage.getItem === 'function') return storage;
+            } catch (e) {
+                /* try the next one */
+            }
+        }
+        return null;
+    }
+
+    function setStored(key, value) {
+        const storage = getStorage();
+        if (storage) storage.setItem(key, value);
+    }
     function getBoolean(value) {
         if (value === 'false' || !value) {
             return false;
