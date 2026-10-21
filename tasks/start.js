@@ -1,7 +1,7 @@
 'use strict';
 
 var Q = require('q');
-var nw = require('nw');
+var nwjs = require('./nwjs');
 var pathUtil = require('path');
 var childProcess = require('child_process');
 var kill = require('tree-kill');
@@ -48,7 +48,7 @@ var runGulpWatch = function () {
 };
 
 var runApp = function () {
-    var app = childProcess.spawn(nw.findpath(), ['./build'], {
+    var app = childProcess.spawn(nwjs.executable(), ['./build'], {
         stdio: 'inherit'
     });
 

@@ -1,13 +1,14 @@
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const path = require('path');
+const nwjs = require('../tasks/nwjs');
 
 // Creates a single webdriver instance that is available for all tests. Also
 // includes an `after` hook to properly shut it down.
 
 function createDriver() {
     // Use chromedriver that comes with nwjs
-    const service = new chrome.ServiceBuilder(path.join(path.dirname(require.resolve('nw')), 'nwjs', 'chromedriver')).build();
+    const service = new chrome.ServiceBuilder(path.join(nwjs.runtimeDir(), 'chromedriver')).build();
     chrome.setDefaultService(service);
 
     // Point chromedriver to the nwjs app

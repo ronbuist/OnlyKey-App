@@ -4,6 +4,7 @@ var Q = require('q');
 var childProcess = require('child_process');
 var jetpack = require('fs-jetpack');
 var utils = require('./utils');
+var nwjs = require('./nwjs');
 
 var projectDir;
 var releasesDir;
@@ -28,9 +29,9 @@ var init = function (params={}) {
 };
 
 var copyRuntime = function () {
-    // this pulls all files and directories from node_modules/nw/nwjs
+    // this pulls all files and directories from the NW.js runtime (see tasks/nwjs.js)
     // and copies them into /opt/OnlyKey
-    return projectDir.copyAsync(`${node_modules_dir}/nw/nwjs`, readyAppDir.path(), { overwrite: true });
+    return projectDir.copyAsync(nwjs.runtimeDir(node_modules_dir), readyAppDir.path(), { overwrite: true });
 };
 
 var copyBuiltApp = function () {

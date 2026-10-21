@@ -1,8 +1,11 @@
 'use strict';
 
 const Q = require('q');
+const path = require('path');
+const { execFileSync } = require('child_process');
 const jetpack = require('fs-jetpack');
 const { replace } = require('./utils');
+const nwjs = require('./nwjs');
 
 let projectDir;
 let releasesDir;
@@ -10,6 +13,9 @@ let tmpDir;
 let finalAppDir;
 let manifest;
 let node_modules_dir;
+let arch;
+
+const run = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8' }).trim();
 
 const init = function (params={}) {
     projectDir = params.projectDir || jetpack;
@@ -17,27 +23,25 @@ const init = function (params={}) {
     releasesDir = params.releasesDir || projectDir.dir('./releases');
     manifest = params.manifest || projectDir.read('package.json', 'json');
     node_modules_dir = params.node_modules_dir || 'node_modules';
+    arch = nwjs.targetArch();
 
     finalAppDir = tmpDir.cwd(manifest.productName + '.app');
     return Q();
 };
 
 const copyRuntime = function () {
-    // When copying files, ignore `ljproj` files. Otherwise, the application
-    // name will show up as 'nwjs'. Thanks to
-    // https://github.com/nwjs-community/nw-builder/
-    console.log(`Copying runtime file nwjs.app from ${projectDir.path(node_modules_dir)}/nw/nwjs...`);
+    const runtimeApp = path.join(nwjs.runtimeDir(node_modules_dir), 'nwjs.app');
+    console.log(`Copying NW.js runtime from ${runtimeApp}...`);
 
-    projectDir.copy(`${node_modules_dir}/nw/nwjs/nwjs.app/Contents`,
-        finalAppDir.path(),
-        { matching: [ 'Versions'] });
+    // ditto keeps the framework symlinks and extended attributes intact
+    run('ditto', [runtimeApp, finalAppDir.path()]);
 
-    return projectDir.copyAsync(`${node_modules_dir}/nw/nwjs/nwjs.app`,
-        finalAppDir.path(),
-        {
-            overwrite: true,
-            matching: [ 'Contents/**/*', '!Contents/Resources/*.lproj/*' ]
-        });
+    // Remove the localized strings, otherwise the application name shows up
+    // as 'nwjs'. Thanks to https://github.com/nwjs-community/nw-builder/
+    finalAppDir.find('Contents/Resources', { matching: '*.lproj/*', files: true, directories: false })
+        .forEach((file) => finalAppDir.remove(file));
+
+    return Q();
 };
 
 const copyBuiltApp = function () {
@@ -45,18 +49,31 @@ const copyBuiltApp = function () {
     return projectDir.copyAsync('build', finalAppDir.path('Contents/Resources/app.nw'));
 };
 
+const plistToJson = (file) => JSON.parse(run('plutil', ['-convert', 'json', '-o', '-', file]));
+
 const prepareOsSpecificThings = function () {
-    // Info.plist
     console.log('Doing OSX-specific things...');
+
+    // Info.plist: keep NW.js's own Info.plist (it has keys Chromium needs) and
+    // overlay our keys from resources/osx/Info.plist on top of it.
     let info = projectDir.read('resources/osx/Info.plist');
     info = replace(info, {
         productName: manifest.productName,
         version: manifest.version
     });
-    finalAppDir.write('Contents/Info.plist', info);
+    tmpDir.write('Info.overlay.plist', info);
+
+    const targetPlist = finalAppDir.path('Contents/Info.plist');
+    const overlay = plistToJson(tmpDir.path('Info.overlay.plist'));
+    Object.keys(overlay).forEach((key) => {
+        const value = overlay[key];
+        const type = typeof value === 'boolean' ? 'bool' : 'string';
+        run('plutil', ['-replace', key, `-${type}`, String(value), targetPlist]);
+    });
+    tmpDir.remove('Info.overlay.plist');
 
     // Icon
-    projectDir.copy('resources/osx/icon.icns', finalAppDir.path('Contents/Resources/icon.icns'));
+    projectDir.copy('resources/osx/icon.icns', finalAppDir.path('Contents/Resources/icon.icns'), { overwrite: true });
 
     // Rename executable, so it looks nice in the installer
     jetpack.rename(finalAppDir.path('Contents/MacOS/nwjs'), manifest.productName);
@@ -64,11 +81,47 @@ const prepareOsSpecificThings = function () {
     return Q();
 };
 
+const checkArchitecture = function () {
+    const exe = finalAppDir.path('Contents/MacOS', manifest.productName);
+    const archs = run('lipo', ['-archs', exe]);
+    console.log(`Executable architecture(s): ${archs}`);
+    if (!archs.split(/\s+/).includes(arch)) {
+        throw new Error(`Expected a ${arch} build, but the NW.js runtime is "${archs}". ` +
+            `Delete node_modules and run "npm install" again (NWJS_ARCH=${arch}).`);
+    }
+    return Q();
+};
+
+const signApp = function () {
+    // Changing Info.plist and adding app.nw invalidates NW.js's signature, and
+    // Apple Silicon Macs refuse to start unsigned arm64 code. Re-sign the bundle:
+    // ad-hoc ("-") by default, or with your Developer ID via CODESIGN_IDENTITY.
+    const identity = process.env.CODESIGN_IDENTITY || '-';
+    console.log(`Code signing with identity "${identity}"...`);
+    run('codesign', ['--force', '--deep', '--sign', identity, finalAppDir.path()]);
+    run('codesign', ['--verify', '--deep', '--strict', finalAppDir.path()]);
+    return Q();
+};
+
+const copyAppToReleases = function () {
+    const target = releasesDir.path(`${manifest.productName}.app`);
+    releasesDir.remove(`${manifest.productName}.app`);
+    run('ditto', [finalAppDir.path(), target]);
+    console.log('App ready!', target);
+    return Q();
+};
+
 const packToDmgFile = function () {
     const deferred = Q.defer();
 
-    const appdmg = require('appdmg');
-    const dmgName = manifest.name + '_' + manifest.version + '.dmg';
+    let appdmg;
+    try {
+        appdmg = require('appdmg');
+    } catch (e) {
+        console.warn('appdmg is not installed, skipping DMG (the .app is in releases/).');
+        return Q();
+    }
+    const dmgName = `${manifest.name}_${manifest.version}_${arch}.dmg`;
 
     // Prepare appdmg config
     let dmgManifest = projectDir.read('resources/osx/appdmg.json');
@@ -92,6 +145,7 @@ const packToDmgFile = function () {
     })
     .on('error', function (err) {
         console.error(err);
+        deferred.resolve();
     })
     .on('finish', function () {
         console.log('DMG file ready!', readyDmgPath);
@@ -110,6 +164,9 @@ module.exports = function (params) {
     .then(copyRuntime)
     .then(copyBuiltApp)
     .then(prepareOsSpecificThings)
+    .then(checkArchitecture)
+    .then(signApp)
+    .then(copyAppToReleases)
     .then(packToDmgFile)
     .then(cleanClutter);
 };

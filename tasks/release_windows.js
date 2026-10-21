@@ -4,6 +4,7 @@ var Q = require('q');
 var childProcess = require('child_process');
 var jetpack = require('fs-jetpack');
 var utils = require('./utils');
+var nwjs = require('./nwjs');
 
 var projectDir;
 var tmpDir;
@@ -24,7 +25,7 @@ var init = function (params={}) {
 };
 
 var copyRuntime = function () {
-    return projectDir.copyAsync(`${node_modules_dir}/nw/nwjs`, readyAppDir.path(), { overwrite: true });
+    return projectDir.copyAsync(nwjs.runtimeDir(node_modules_dir), readyAppDir.path(), { overwrite: true });
 };
 
 var copyBuiltApp = function () {
