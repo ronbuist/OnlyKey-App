@@ -65,11 +65,12 @@
   },
   "homepage": "https://github.com/trustcrypto/OnlyKey-App#readme",
   "window": {
+    "id": "onlykey-main",
     "icon": "icon.png",
     "show": false,
     "toolbar": true,
-    "width": 1000,
-    "height": 600,
+    "width": 1024,
+    "height": 768,
     "min_width": 800,
     "min_height": 400,
     "position": "center"
