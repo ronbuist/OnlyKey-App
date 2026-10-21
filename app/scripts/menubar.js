@@ -180,7 +180,7 @@
         id: "onlykey-unlock",
         title: "Unlock OnlyKey",
         width: 380,
-        height: isDuo ? 270 : 210,
+        height: isDuo ? 255 : 200,
         resizable: false,
         position: "center",
         focus: true,
