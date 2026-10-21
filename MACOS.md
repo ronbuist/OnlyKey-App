@@ -100,7 +100,7 @@ shows `Signature=adhoc` and `flags=0x10002(adhoc,runtime)`.
 
 ## Dependencies and security
 
-To keep known vulnerabilities out (`npm audit`), this branch:
+To keep known vulnerabilities out and limit what can go wrong, this branch:
 
 - replaces the abandoned `request` package with a small helper on Node's built-in
   `https` module (`app/scripts/httpsGet.js`), used for the firmware update check;
@@ -111,6 +111,14 @@ To keep known vulnerabilities out (`npm audit`), this branch:
   deprecation warnings;
 - makes `nw` (the NW.js download helper) a build-time dependency only, so the app itself
   contains just `auto-launch`, `sshpk`, `js-sha256` and their sub-packages;
+- downloads firmware only from GitHub's release addresses (`github.com`,
+  `objects.githubusercontent.com`, `release-assets.githubusercontent.com`), over HTTPS,
+  at most 10 MB;
+- removes logging of secrets (PIN, slot passwords, OTP secrets, keys) from the original
+  code, and a release build logs only warnings and errors unless started with
+  `--keybar-debug`;
+- the unlock and About windows have a Content Security Policy: they can only load files
+  from the app itself;
 - generates `THIRD-PARTY-NOTICES.txt` with the licenses of everything bundled, shown in
   *About KeyBar*;
 - removes the automatic app update check (`nw-autoupdater`): it checked the official
@@ -118,11 +126,21 @@ To keep known vulnerabilities out (`npm audit`), this branch:
 
 `npm audit` reports 0 vulnerabilities.
 
-## If the key isn't detected
+## Troubleshooting and logs
 
-This version moves from NW.js 0.71 to 0.117. The app talks to the key through NW.js's
-`chrome.hid` API, which is still part of NW.js, but this upgrade has not yet been tested
-with a real key on a Mac. If the key isn't found:
+KeyBar works with the OnlyKey through NW.js's `chrome.hid` API; it has been tested with an
+OnlyKey DUO on an Apple Silicon Mac.
+
+To see what the app does, start it from Terminal with a log (quit KeyBar first):
+
+    "/Applications/KeyBar.app/Contents/MacOS/KeyBar" --enable-logging=stderr --keybar-debug 2>&1 | grep CONSOLE
+
+Without `--keybar-debug` a release build only logs warnings and errors. The log never
+contains your PIN, slot passwords, OTP secrets or keys: the code that sends data to the key
+logs only which command it sends, not the data. Still, treat logs as private and delete
+them when you're done.
+
+If the key isn't found:
 
 - Install the NW.js SDK build, which has developer tools:
   `rm -rf node_modules && NWJS_BUILD_TYPE=sdk npm install`, then `npm start`,

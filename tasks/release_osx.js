@@ -161,11 +161,15 @@ const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),
 // Let Finder arrange the mounted (writable) image once; Finder stores the result
 // in the image's hidden .DS_Store. Needs permission for the terminal to control
 // Finder (macOS asks the first time). Returns false if that isn't possible.
+// An AppleScript string literal: quotes and backslashes escaped, so a path or name
+// can never break out of the string.
+const asString = (value) => '"' + String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+
 const layoutDmgWindow = function (mountPoint, appName) {
     const [x, y] = [200, 160]; // where the window opens on screen
     const script = `
         tell application "Finder"
-            set dmgFolder to (POSIX file "${mountPoint}" as alias)
+            set dmgFolder to (POSIX file ${asString(mountPoint)} as alias)
             open dmgFolder
             set w to container window of dmgFolder
             set current view of w to icon view
@@ -176,7 +180,7 @@ const layoutDmgWindow = function (mountPoint, appName) {
             set arrangement of opts to not arranged
             set icon size of opts to ${DMG_ICON_SIZE}
             set text size of opts to 13
-            set position of item "${appName}" of dmgFolder to {${DMG_APP_POSITION.join(', ')}}
+            set position of item ${asString(appName)} of dmgFolder to {${DMG_APP_POSITION.join(', ')}}
             set position of item "Applications" of dmgFolder to {${DMG_APPLICATIONS_POSITION.join(', ')}}
             set position of item "LICENSE.txt" of dmgFolder to {${DMG_LICENSE_POSITION.join(', ')}}
             update dmgFolder without registering applications
