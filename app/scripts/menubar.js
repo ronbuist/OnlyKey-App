@@ -87,9 +87,8 @@
   }
 
   if (osx) {
-    // Start hidden and without a Dock icon (app.js normally does this already when it
-    // creates the window). NW.js's setShowInTaskbar(false) makes the whole app a
-    // menu-bar app on macOS. Don't use LSUIElement in Info.plist instead: Chromium
+    // Start hidden ("show": false in package.json) and without a Dock icon:
+    // NW.js's setShowInTaskbar(false) makes the whole app a menu-bar app on macOS. Don't use LSUIElement in Info.plist instead: Chromium
     // then takes the app for one of its helper processes and crashes at startup.
     mainWin.hide();
     try {

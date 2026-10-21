@@ -42,13 +42,10 @@ function getSupportedDevice(deviceInfo) {
 }
 
 chrome.app.runtime.onLaunched.addListener(function() {
-  // macOS desktop app: start hidden, it lives in the menu bar. scripts/menubar.js
-  // removes the Dock icon with setShowInTaskbar(false). (chrome.app.window.create
-  // doesn't accept show_in_taskbar, and LSUIElement in Info.plist crashes Chromium.)
-  const menuBarMode = typeof nw != 'undefined' && require('os').platform() === 'darwin';
-  const windowOptions = { outerBounds: { width: 1024, height: 768 } };
-  if (menuBarMode) windowOptions.hidden = true;
-  chrome.app.window.create("app.html", windowOptions);
+  chrome.app.window.create(
+      "app.html", {
+        outerBounds: { width: 1024, height: 768 }
+      });
 });
     
 var onDevicesEnumerated = async function (devices) {
@@ -106,12 +103,11 @@ if (typeof nw == 'undefined') {
 
         chrome.hid.getDevices(deviceInfo, onDevicesEnumerated);
     }
-} else if (!require('./scripts/userPreferences.js').hasStoredValue('autoLaunch')) {
+} else if (!localStorage.hasOwnProperty('autoLaunch')) {
     // default autoLaunch to true if first time running app
     const AutoLaunch = require('auto-launch');
     const appPath = require('./scripts/non-renderer-app-path');
-    const productName = (nw.App.manifest && nw.App.manifest.productName) || 'OnlyKey';
-    const appName = appPath.includes('node_modules') ? `${productName}-dev` : productName;
+    const appName = appPath.includes('nwjs Helper') ? 'OnlyKey-dev' : 'OnlyKey';
     const userPreferences = require('./scripts/userPreferences.js');
     const os = require('os');
     const osx = os.platform() === 'darwin';

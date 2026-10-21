@@ -3,8 +3,9 @@
 This branch changes how the app behaves on macOS:
 
 - **No Dock icon, no window at startup.** The app lives in the menu bar only. The main
-  window is created hidden with NW.js's `show_in_taskbar: false`, which removes the
-  Dock icon while the app runs (`app/app.js`, `app/scripts/menubar.js`). Don't use
+  window starts hidden (`"show": false`) and `app/scripts/menubar.js` calls NW.js's
+  `setShowInTaskbar(false)`, which removes the Dock icon while the app runs. NW.js opens
+  `app.html` directly (`"main": "app.html"`); `app/app.js` is only used by the Chrome app. Don't use
   `LSUIElement` in `Info.plist` for this: Chromium then crashes at startup
   ("icudtl.dat not found in bundle"), and the release script refuses to build it.
 - **Everything from the menu-bar icon:** connection status, *Unlock OnlyKey…*,
@@ -67,9 +68,11 @@ this branch does not set up.)
 
 ### After installing
 
-- The first time, start the app from `/Applications`. Turn on
-  *App Settings → Auto-launch app on system login* in the menu-bar menu so it is always
-  there when you plug in the key.
+- The first time, start the app from `/Applications`. It turns on
+  *App Settings → Auto-launch app on system login* by default, so it is always there
+  when you plug in the key. On macOS this is a launch agent
+  (`~/Library/LaunchAgents/OnlyKey Menu Bar.plist`), not a login item, so no
+  "control System Events" permission is needed.
 - *App Settings → Automatically check for app updates* points at the official
   CryptoTrust releases, which would replace this build. You may want to turn it off.
 - Settings are separate from the official app, so preferences you set there don't carry

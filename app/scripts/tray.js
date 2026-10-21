@@ -32,7 +32,11 @@
   };
 
   if (osx) {
-      autoLaunchOptions.path = appPath;
+      // MACOS: use a launch agent (~/Library/LaunchAgents/<appName>.plist) instead of a
+      // login item: login items go through System Events, which needs an extra
+      // permission prompt and can hang. The agent starts the executable directly.
+      autoLaunchOptions.path = `${appPath}/Contents/MacOS/${productName}`;
+      autoLaunchOptions.mac = { useLaunchAgent: true };
   }
 
   const autoLaunch = new AutoLaunch(autoLaunchOptions);
@@ -49,6 +53,19 @@
     return autoLaunchEnabledInOSAtLaunch;
   });
   await Promise.race([autoLaunchCheck, new Promise((resolve) => setTimeout(resolve, 3000))]);
+
+  // First run: enable auto-launch by default (this used to be done in app.js).
+  if (!userPreferences.hasStoredValue('autoLaunch')) {
+    autoLaunchCheck.then((isEnabled) => {
+      if (isEnabled) return;
+      console.info('tray.js: first run, enabling auto-launch');
+      return autoLaunch.enable().then(() => {
+        userPreferences.autoLaunch = true;
+        autoLaunchMenuItem.checked = true;
+        refreshMenuItem(autoLaunchMenuItem, 0);
+      });
+    }).catch(console.error);
+  }
 
   const autoLaunchMenuItem = new nw.MenuItem({
     label: 'Auto-launch app on system login',

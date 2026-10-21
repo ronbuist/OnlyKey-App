@@ -4,7 +4,7 @@
   "version": "5.5.0",
   "version_name": "5.5.0",
   "description": "Setup and configure OnlyKey",
-  "main": "app.js",
+  "main": "app.html",
   "scripts": {
     "build": "./node_modules/.bin/gulp build",
     "build_win": ".\\node_modules\\.bin\\gulp build",
