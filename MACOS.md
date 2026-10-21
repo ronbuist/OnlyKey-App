@@ -90,6 +90,10 @@ To keep known vulnerabilities out (`npm audit`), this branch:
 - builds with plain Node.js scripts (`tasks/build.js`, `tasks/release.js`) instead of
   gulp, and the DMG with `hdiutil` instead of `appdmg`;
 - drops unused packages (`gulp-sourcemaps`, `nw-dev`, `tree-kill`);
+- makes `nw` (the NW.js download helper) a build-time dependency only, so the app itself
+  contains just `auto-launch`, `sshpk`, `js-sha256` and their sub-packages;
+- generates `THIRD-PARTY-NOTICES.txt` with the licenses of everything bundled, shown in
+  *About KeyBar*;
 - removes the automatic app update check (`nw-autoupdater`): it checked the official
   CryptoTrust releases, which would replace this build. The firmware update check stays.
 

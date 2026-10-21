@@ -31,7 +31,7 @@ var init = function (params={}) {
 var copyRuntime = function () {
     // this pulls all files and directories from the NW.js runtime (see tasks/nwjs.js)
     // and copies them into /opt/OnlyKey
-    return projectDir.copyAsync(nwjs.runtimeDir(node_modules_dir), readyAppDir.path(), { overwrite: true });
+    return projectDir.copyAsync(nwjs.runtimeDir() /* build tool, in ./node_modules */, readyAppDir.path(), { overwrite: true });
 };
 
 var copyBuiltApp = function () {

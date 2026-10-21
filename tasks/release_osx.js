@@ -30,7 +30,7 @@ const init = function (params={}) {
 };
 
 const copyRuntime = function () {
-    const runtimeApp = path.join(nwjs.runtimeDir(node_modules_dir), 'nwjs.app');
+    const runtimeApp = path.join(nwjs.runtimeDir() /* build tool, in ./node_modules */, 'nwjs.app');
     console.log(`Copying NW.js runtime from ${runtimeApp}...`);
 
     // ditto keeps the framework symlinks and extended attributes intact

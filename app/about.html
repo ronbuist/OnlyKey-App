@@ -76,6 +76,7 @@
         -webkit-user-select: text;
         user-select: text;
       }
+      pre.mono { font: 10.5px/1.45 ui-monospace, Menlo, monospace; }
       footer { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; }
       button {
         font: inherit;
@@ -112,15 +113,21 @@
           (<a data-href="http://www.crp.to/ok">http://www.crp.to/ok</a>).
         </p>
         <p class="small" style="margin-top: 12px">
+          KeyBar's changes were written by Claude, an AI model made by Anthropic, at the
+          request and under the direction of Ron Buist.
+        </p>
+        <p class="small" style="margin-top: 8px">
           Source code: <a data-href="https://github.com/ronbuist/OnlyKey-App">github.com/ronbuist/OnlyKey-App</a><br />
           Official OnlyKey App: <a data-href="https://github.com/trustcrypto/OnlyKey-App">github.com/trustcrypto/OnlyKey-App</a>
         </p>
       </section>
 
       <pre id="license" class="hide">Loading license…</pre>
+      <pre id="notices" class="hide mono">Loading third-party notices…</pre>
 
       <footer>
-        <button type="button" id="licenseBtn">Show License</button>
+        <button type="button" id="licenseBtn">License</button>
+        <button type="button" id="noticesBtn">Third-Party Notices</button>
         <button type="button" class="primary" id="closeBtn">Close</button>
       </footer>
     </main>
@@ -152,35 +159,54 @@
           text.trim().split(/\r?\n/).forEach((raw) => {
             const line = raw.trim();
             const last = out.length ? out[out.length - 1] : "";
+            const separator = /^[-=]{5,}$/;
             if (!line) out.push("");
-            else if (!last || /^\d+\.\s/.test(line)) out.push(line);
+            else if (!last || separator.test(last) || separator.test(line) || /^\d+\.\s/.test(line)) out.push(line);
             else out[out.length - 1] = `${last} ${line}`;
           });
           return out.join("\n").replace(/\n{3,}/g, "\n\n");
         }
 
-        let licenseLoaded = false;
-        async function loadLicense() {
-          if (licenseLoaded) return;
+        // Views: the info text, the license (reflowed) or the third-party notices (as is).
+        const docs = {
+          license: { file: "/LICENSE.txt", button: "licenseBtn", label: "License", reflow: true },
+          notices: { file: "/THIRD-PARTY-NOTICES.txt", button: "noticesBtn", label: "Third-Party Notices" },
+        };
+        const loaded = {};
+        let current = "info";
+
+        async function load(name) {
+          if (loaded[name]) return;
+          const doc = docs[name];
           try {
-            const res = await fetch("/LICENSE.txt");
+            const res = await fetch(doc.file);
             if (!res.ok) throw new Error(res.status);
-            $("license").textContent = reflow(await res.text());
-            licenseLoaded = true;
+            const text = await res.text();
+            $(name).textContent = doc.reflow ? reflow(text) : text.trim();
+            loaded[name] = true;
           } catch (e) {
-            $("license").textContent =
-              "The license file could not be loaded. It is also included as LICENSE.txt " +
-              "in the KeyBar disk image and source code.";
+            $(name).textContent =
+              `${doc.file.slice(1)} could not be loaded. It is also included in the KeyBar ` +
+              "source code" + (name === "license" ? " and disk image." : ".");
           }
         }
 
-        $("licenseBtn").addEventListener("click", () => {
-          const showing = !$("license").classList.contains("hide");
-          $("license").classList.toggle("hide", showing);
-          $("info").classList.toggle("hide", !showing);
-          $("licenseBtn").textContent = showing ? "Show License" : "Back";
-          if (!showing) loadLicense();
-        });
+        function show(name) {
+          current = name;
+          $("info").classList.toggle("hide", name !== "info");
+          Object.keys(docs).forEach((key) => {
+            $(key).classList.toggle("hide", key !== name);
+            $(docs[key].button).textContent = key === name ? "Back" : docs[key].label;
+          });
+          if (name !== "info") {
+            $(name).scrollTop = 0;
+            load(name);
+          }
+        }
+
+        Object.keys(docs).forEach((key) =>
+          $(docs[key].button).addEventListener("click", () => show(current === key ? "info" : key))
+        );
 
         $("closeBtn").addEventListener("click", () => (api ? api.close() : window.close()));
         document.addEventListener("keydown", (e) => {

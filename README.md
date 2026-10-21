@@ -139,8 +139,20 @@ For more information on export restrictions see: http://www.apache.org/licenses/
 
 This product includes software developed by the OnlyKey Project (http://www.crp.to/ok).
 
-The code is distributed under the license in [LICENSE.txt](LICENSE.txt) (Copyright (c)
-2017, CryptoTrust LLC), which this fork keeps unchanged. (`package.json` of the official app
-lists "Apache-2.0"; the license file is what is included here.) The changes in this fork are
-listed above, in [MACOS.md](MACOS.md) and in the git history. OnlyKey is a trademark of its
-owner; this fork is not affiliated with or endorsed by CryptoTrust or the OnlyKey Project.
+**License.** KeyBar is distributed under the license in [LICENSE.txt](LICENSE.txt): the
+original OnlyKey license (Copyright (c) 2017, CryptoTrust LLC), unchanged, followed by a short
+KeyBar section. The official app's `package.json` listed "Apache-2.0", but the license file is
+what applies; `package.json` here now says `SEE LICENSE IN LICENSE.txt`.
+
+**Who made the changes.** Modifications Copyright (c) 2026 Ron Buist. The modifications in this
+fork were written by Claude, an AI model made by Anthropic, at the request and under the
+direction of Ron Buist. They are distributed under the same terms as the original license.
+
+**Third-party software** included in the app (NW.js, OpenPGP.js, FileSaver.js and a few npm
+packages) is listed with its licenses in `THIRD-PARTY-NOTICES.txt`. That file is generated
+during the build (`tasks/thirdPartyNotices.js`) and shown in the app under *About KeyBar →
+Third-Party Notices*; the license texts of the bundled libraries are in `resources/licenses/`.
+
+The changes in this fork are listed above, in [MACOS.md](MACOS.md) and in the git history.
+OnlyKey is a trademark of its owner; this fork is not affiliated with or endorsed by
+CryptoTrust or the OnlyKey Project.

@@ -34,6 +34,11 @@ function build() {
   rootDir.copy("manifest.json", destDir.path("manifest.json"), { overwrite: true });
   rootDir.copy("resources/keybar/keybar_128.png", destDir.path("icon.png"), { overwrite: true });
   rootDir.copy("LICENSE.txt", destDir.path("LICENSE.txt"), { overwrite: true });
+  if (!isChrome) {
+    // Licenses of the third-party software in the app (shown in the About window).
+    const nodeModules = rootDir.path(env === "production" ? getNodeModulesDir() : "node_modules");
+    destDir.write("THIRD-PARTY-NOTICES.txt", require("./thirdPartyNotices").generate(nodeModules));
+  }
 
   if (isChrome) {
     console.log("Copying resources/onlykey_logo_*.png for Chrome extension...");

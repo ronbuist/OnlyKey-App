@@ -243,7 +243,7 @@
         id: "keybar-about",
         title: `About ${manifest.productName || "KeyBar"}`,
         width: 460,
-        height: 400,
+        height: 430,
         resizable: false,
         position: "center",
         focus: true,

@@ -25,7 +25,7 @@ var init = function (params={}) {
 };
 
 var copyRuntime = function () {
-    return projectDir.copyAsync(nwjs.runtimeDir(node_modules_dir), readyAppDir.path(), { overwrite: true });
+    return projectDir.copyAsync(nwjs.runtimeDir() /* build tool, in ./node_modules */, readyAppDir.path(), { overwrite: true });
 };
 
 var copyBuiltApp = function () {
